@@ -111,7 +111,9 @@ function App(): React.JSX.Element {
   return (
     <LanguageProvider>
       <NavigationContainer>
-        {isAuthenticated ? <MainTabs /> : <AuthStack />}
+        {isAuthenticated 
+        ? <MainTabs /> :
+         <AuthStack />}
       </NavigationContainer>
     </LanguageProvider>
   );

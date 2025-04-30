@@ -1,51 +1,41 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Platform, Alert } from 'react-native';
+import { launchImageLibrary } from 'react-native-image-picker';
 
-interface ImageUploaderProps {
+interface MediaUploaderProps {
   label?: string;
   value?: string;
   onChange: (uri: string) => void;
   error?: string;
   aspect?: [number, number];
   quality?: number;
+  type?: 'image' | 'video';
 }
 
-const ImageUploader = ({ 
+const MediaUploader = ({ 
   label, 
   value, 
   onChange, 
   error,
   aspect = [1, 1],
-  quality = 0.5
-}: ImageUploaderProps) => {
+  quality = 0.5,
+  type = 'image',
+}: MediaUploaderProps) => {
   const [loading, setLoading] = useState(false);
 
-  const pickImage = async () => {
+  const pickMedia = async () => {
     try {
       setLoading(true);
-      
-      // Request permissions
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Sorry, we need camera roll permissions to make this work!');
-        return;
-      }
-
-      // Pick the image
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect,
-        quality,
+      const result = await launchImageLibrary({
+        mediaType: type === 'video' ? 'video' : 'photo',
+        quality: 1,
       });
-
-      if (!result.canceled && result.assets[0].uri) {
+      if (!result.didCancel && result.assets && result.assets[0].uri) {
         onChange(result.assets[0].uri);
       }
     } catch (error) {
-      console.error('Error picking image:', error);
-      alert('Error picking image. Please try again.');
+      console.error('Error picking media:', error);
+      Alert.alert('Error picking media. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -56,14 +46,20 @@ const ImageUploader = ({
       {label && <Text style={styles.label}>{label}</Text>}
       <TouchableOpacity 
         style={[styles.uploader, error && styles.uploaderError]} 
-        onPress={pickImage}
+        onPress={pickMedia}
         disabled={loading}
       >
         {value ? (
-          <Image source={{ uri: value }} style={styles.image} />
+          type === 'image' ? (
+            <Image source={{ uri: value }} style={styles.image} />
+          ) : (
+            <View style={styles.placeholder}>
+              <Text style={styles.placeholderText}>Video selected</Text>
+            </View>
+          )
         ) : (
           <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>Tap to upload image</Text>
+            <Text style={styles.placeholderText}>Tap to upload {type}</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -115,4 +111,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ImageUploader; 
+export default MediaUploader; 

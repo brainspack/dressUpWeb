@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import Input from '../components/Input';
 import Dropdown from '../components/Dropdown';
 import DatePicker from '../components/DatePicker';
-import ImageUploader from '../components/ImageUploader';
+import MediaUploader from '../components/MediaUploader';
 import StatusBadge from '../components/StatusBadge';
 import { useState } from 'react';
 
@@ -34,10 +34,11 @@ const DummyScreen = () => {
         value={selectedDate}
         onChange={setSelectedDate}
       />
-      <ImageUploader
+      <MediaUploader
         label="Profile Picture"
         value={imageUri}
         onChange={setImageUri}
+        type="image"
       />
       <StatusBadge
         status="success"

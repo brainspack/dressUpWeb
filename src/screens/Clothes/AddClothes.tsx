@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainTabParamList } from '../../navigation/types';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
-import * as ImagePicker from 'expo-image-picker';
+import MediaUploader from '../../components/MediaUploader';
 
 type AddClothesScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'AddClothes'>;
 
@@ -34,43 +34,6 @@ const AddClothes = () => {
     material: '',
   });
   const [loading, setLoading] = useState(false);
-
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Sorry, we need camera roll permissions to make this work!');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setForm({ ...form, imageUri: result.assets[0].uri });
-    }
-  };
-
-  const pickVideo = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Sorry, we need camera roll permissions to make this work!');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setForm({ ...form, videoUri: result.assets[0].uri });
-    }
-  };
 
   const validateForm = () => {
     if (!form.name.trim()) {
@@ -178,23 +141,19 @@ const AddClothes = () => {
         <View style={styles.mediaSection}>
           <Text style={styles.sectionTitle}>Media</Text>
           <View style={styles.mediaButtons}>
-            <Button
-              title="Add Image"
-              onPress={pickImage}
-              variant="secondary"
+            <MediaUploader
+              label="Add Image"
+              value={form.imageUri}
+              onChange={uri => setForm({ ...form, imageUri: uri })}
+              type="image"
             />
-            <Button
-              title="Add Video"
-              onPress={pickVideo}
-              variant="secondary"
+            <MediaUploader
+              label="Add Video"
+              value={form.videoUri}
+              onChange={uri => setForm({ ...form, videoUri: uri })}
+              type="video"
             />
           </View>
-          {form.imageUri && (
-            <Image
-              source={{ uri: form.imageUri }}
-              style={styles.preview}
-            />
-          )}
         </View>
 
         <Input
