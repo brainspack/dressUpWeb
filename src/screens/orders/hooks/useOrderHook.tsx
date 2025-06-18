@@ -5,6 +5,17 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { baseApi } from '../../../api/baseApi';
 import { formSchema, OrderFormData } from '../schemas/orderSchemas';
 import { useOrderStore } from '../../../store/useOrderStore';
+import {
+  useOrderInitializationEffect,
+  useMeasurementsInitializationEffect,
+  useMeasurementChangeLoggerEffect,
+  useCurrentMeasurementsLoggerEffect,
+  useFormErrorNavigationEffect,
+  useFetchTailorsEffect,
+  useFetchShopIdEffect,
+  useSetTailorOnLoadEffect,
+  useSetTailorIdIfMissingEffect
+} from './orderEffects';
 
 interface TailorOption {
   label: string;
@@ -294,89 +305,6 @@ export const useOrderHook = ({
     }, [initialData, navigationState, location.search, isFormInitialized]),
   });
 
-  // Effect to fetch order data from API when in edit mode
-  useEffect(() => {
-    if (isEditMode && orderId && !isFormInitialized) {
-      console.log('Fetching order data from API for edit mode');
-      fetchOrderData(orderId)
-        .then((orderData) => {
-          console.log('Successfully fetched order data:', orderData);
-          // Reset form with fetched data
-          reset(orderData);
-          setIsFormInitialized(true);
-        })
-        .catch((error) => {
-          console.error('Failed to fetch order data:', error);
-          // Error is already set in fetchOrderData
-        });
-    }
-  }, [isEditMode, orderId, isFormInitialized, fetchOrderData, reset]);
-
-  // Add specific effect to handle measurements initialization
-  useEffect(() => {
-    if (initialData?.clothes) {
-      console.log('Setting measurements from initialData:', initialData.clothes);
-      
-      initialData.clothes.forEach((item, clothesIndex) => {
-        if (item.measurements) {
-          item.measurements.forEach((measurement, measurementIndex) => {
-            // Set each measurement field individually
-            Object.entries(measurement).forEach(([field, value]) => {
-              if (value !== null && value !== undefined) {
-                console.log(`Setting measurement clothes[${clothesIndex}].measurements[${measurementIndex}].${field} to:`, value);
-                setValue(
-                  `clothes.${clothesIndex}.measurements.${measurementIndex}.${field}` as any,
-                  value,
-                  { shouldValidate: true }
-                );
-              }
-            });
-          });
-        }
-      });
-    }
-  }, [initialData, setValue]);
-
-  // Add effect to monitor measurement changes
-  useEffect(() => {
-    const subscription = watch((value, { name, type }) => {
-      if (name?.startsWith('clothes.') && name.includes('measurements')) {
-        const clothesIndex = parseInt(name.split('.')[1]);
-        const measurementIndex = parseInt(name.split('.')[3]);
-        const measurementField = name.split('.')[4];
-        
-        console.log('Measurement updated:', {
-          clothesIndex,
-          measurementIndex,
-          measurementField,
-          newValue: (value.clothes?.[clothesIndex]?.measurements?.[measurementIndex] as any)?.[measurementField],
-          allMeasurements: value.clothes?.[clothesIndex]?.measurements
-        });
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [watch]);
-
-  // Add effect to log current measurements state
-  useEffect(() => {
-    const currentClothes = watch('clothes');
-    console.log('Current measurements state:', currentClothes?.map(item => ({
-      type: item.type,
-      measurements: item.measurements,
-      measurementsLength: item.measurements?.length,
-      firstMeasurement: item.measurements?.[0]
-    })));
-  }, [watch('clothes')]);
-
-  // Add effect to handle form initialization errors
-  useEffect(() => {
-    if (formError) {
-      console.error('Form initialization error:', formError);
-      onBack?.();
-    }
-  }, [formError, onBack]);
-
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'clothes',
@@ -454,24 +382,16 @@ export const useOrderHook = ({
     }
   }, [currentShopId]);
 
-  // Fetch tailors only once when shopId is available
-  useEffect(() => {
-    if (currentShopId && !hasFetchedTailors.current) {
-      fetchTailors();
-    }
-  }, [currentShopId, fetchTailors]);
-
-  // Fetch shop ID only once on component mount
-  useEffect(() => {
-    console.log('fetchShopId effect triggered');
-    console.log('isFormInitialized:', isFormInitialized);
-    console.log('current shopId from watch:', watch('shopId'));
-    
-    // Only fetch if form is initialized and shopId is not set
-    if (isFormInitialized) {
-      fetchShopId();
-    }
-  }, [isFormInitialized, fetchShopId]);
+  // Now call the effect helpers after all dependencies are defined:
+  useOrderInitializationEffect(isEditMode, orderId, isFormInitialized, fetchOrderData, reset, setIsFormInitialized);
+  useMeasurementsInitializationEffect(initialData, setValue);
+  useMeasurementChangeLoggerEffect(watch);
+  useCurrentMeasurementsLoggerEffect(watch);
+  useFormErrorNavigationEffect(formError, onBack);
+  useFetchTailorsEffect(currentShopId, hasFetchedTailors, fetchTailors);
+  useFetchShopIdEffect(isFormInitialized, fetchShopId, watch);
+  useSetTailorOnLoadEffect(tailors, initialData, navigationState, setValue, watch);
+  useSetTailorIdIfMissingEffect(isFormInitialized, tailors, watch, setValue);
 
   const costs = watch('costs') || [{ materialCost: 0, laborCost: 0, totalCost: 0 }];
 
@@ -492,121 +412,6 @@ export const useOrderHook = ({
       setValue('tailorName', selectedTailor.label);
       setValue('tailorNumber', selectedTailor.mobileNumber);
       setValue('tailorId', selectedTailor.value);
-    }
-  };
-
-  // Add effect to set tailor when tailors are loaded and initialData or navigationState is present
-  useEffect(() => {
-    if (tailors.length > 0) {
-      console.log('Tailors loaded, trying to set initial tailor');
-      console.log('Available tailors:', tailors);
-      console.log('Initial data tailorId:', initialData?.tailorId);
-      console.log('Initial data tailorName:', initialData?.tailorName);
-      console.log('Navigation state tailorId:', navigationState?.order?.tailorId);
-      console.log('Navigation state tailorName:', navigationState?.order?.tailorName);
-      console.log('Current form tailorName:', watch('tailorName'));
-      console.log('Current form tailorId:', watch('tailorId'));
-      
-      // First try to find by tailorId
-      const tailorToSelectId = initialData?.tailorId || navigationState?.order?.tailorId || watch('tailorId');
-      if (tailorToSelectId && tailorToSelectId !== '') {
-        const initialTailor = tailors.find(t => t.value === tailorToSelectId);
-        if (initialTailor) {
-          console.log('Found tailor by ID:', initialTailor);
-          setValue('tailorName', initialTailor.label);
-          setValue('tailorNumber', initialTailor.mobileNumber || '');
-          setValue('tailorId', initialTailor.value);
-        }
-      } else {
-        // If no tailorId, try to find by tailorName
-        const tailorName = initialData?.tailorName || navigationState?.order?.tailorName || watch('tailorName');
-        if (tailorName && tailorName !== '') {
-          console.log('Looking for tailor by name:', tailorName);
-          const initialTailor = tailors.find(t => t.label === tailorName);
-          if (initialTailor) {
-            console.log('Found tailor by name:', initialTailor);
-            setValue('tailorName', initialTailor.label);
-            setValue('tailorNumber', initialTailor.mobileNumber || '');
-            setValue('tailorId', initialTailor.value);
-          } else {
-            console.log('No tailor found with name:', tailorName);
-            console.log('Available tailor names:', tailors.map(t => t.label));
-          }
-        } else {
-          console.log('No tailor name or ID found to pre-select');
-        }
-      }
-    }
-  }, [tailors, initialData, navigationState, setValue, watch]);
-
-  // Additional effect to ensure tailor is selected when form is reset with data
-  useEffect(() => {
-    if (isFormInitialized && tailors.length > 0) {
-      const currentTailorName = watch('tailorName');
-      const currentTailorId = watch('tailorId');
-      
-      if (currentTailorName && !currentTailorId) {
-        console.log('Form initialized but tailorId missing, trying to find by name:', currentTailorName);
-        const tailor = tailors.find(t => t.label === currentTailorName);
-        if (tailor) {
-          console.log('Found and setting tailor by name:', tailor);
-          setValue('tailorId', tailor.value);
-        }
-      }
-    }
-  }, [isFormInitialized, tailors, watch, setValue]);
-
-  // Add a function to append clothing items with proper measurement structure
-  const appendClothingItem = () => {
-    append({
-      type: '',
-      color: '',
-      fabric: '',
-      designNotes: '',
-      imageUrls: [],
-      videoUrls: [],
-      measurements: [{
-        height: null,
-        chest: null,
-        waist: null,
-        hip: null,
-        shoulder: null,
-        sleeveLength: null,
-        inseam: null,
-        neck: null,
-      }]
-    });
-  };
-
-  // Add a function to handle remove/reset logic for clothing items
-  const handleRemoveOrResetClothingItem = () => {
-    const currentFields = watch('clothes');
-    
-    if (currentFields.length === 1) {
-      // If only 1 item, reset its values instead of removing
-      setValue('clothes.0', {
-        type: '',
-        color: '',
-        fabric: '',
-        designNotes: '',
-        imageUrls: [],
-        videoUrls: [],
-        measurements: [{
-          height: null,
-          chest: null,
-          waist: null,
-          hip: null,
-          shoulder: null,
-          sleeveLength: null,
-          inseam: null,
-          neck: null,
-        }]
-      });
-      console.log('Reset clothing item values (only 1 item)');
-    } else {
-      // If 2 or more items, remove the last one
-      remove(currentFields.length - 1);
-      console.log('Removed last clothing item');
     }
   };
 
@@ -710,6 +515,57 @@ export const useOrderHook = ({
 
       const errorMessage = err.response?.data?.message || err.message || 'Unknown error occurred while saving order';
       // alert(`Error saving order: ${errorMessage}`);
+    }
+  };
+
+  // Add a function to append clothing items with proper measurement structure
+  const appendClothingItem = () => {
+    append({
+      type: '',
+      color: '',
+      fabric: '',
+      designNotes: '',
+      imageUrls: [],
+      videoUrls: [],
+      measurements: [{
+        height: null,
+        chest: null,
+        waist: null,
+        hip: null,
+        shoulder: null,
+        sleeveLength: null,
+        inseam: null,
+        neck: null,
+      }]
+    });
+  };
+
+  // Add a function to handle remove/reset logic for clothing items
+  const handleRemoveOrResetClothingItem = () => {
+    const currentFields = watch('clothes');
+    if (currentFields.length === 1) {
+      // If only 1 item, reset its values instead of removing
+      setValue('clothes.0', {
+        type: '',
+        color: '',
+        fabric: '',
+        designNotes: '',
+        imageUrls: [],
+        videoUrls: [],
+        measurements: [{
+          height: null,
+          chest: null,
+          waist: null,
+          hip: null,
+          shoulder: null,
+          sleeveLength: null,
+          inseam: null,
+          neck: null,
+        }]
+      });
+    } else {
+      // If 2 or more items, remove the last one
+      remove(currentFields.length - 1);
     }
   };
 

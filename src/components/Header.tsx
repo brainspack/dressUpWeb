@@ -4,8 +4,8 @@ import { Input } from "./ui/input";
 import useAuthStore, { User } from '../store/useAuthStore';
 
 interface HeaderProps {
-  title: string;
-  onToggleSidebar: () => void;
+  title?: string;
+  onToggleSidebar?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ title, onToggleSidebar }) => {
@@ -14,21 +14,23 @@ const Header: React.FC<HeaderProps> = ({ title, onToggleSidebar }) => {
   return (
     <header className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
       <div className="flex items-center">
-        <button
-          onClick={onToggleSidebar}
-          className="bg-transparent text-black p-2 rounded-md mr-4 md:block"
-          style={{
-            backgroundColor: 'transparent',
-            outline: 'none',
-            boxShadow: 'none',
-            border: 'none',
-          }}
-          onMouseDown={(e) => e.preventDefault()}
-        >
-          <Menu size={24} className="text-black" />
-        </button>
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="bg-transparent text-black p-2 rounded-md mr-4 md:block"
+            style={{
+              backgroundColor: 'transparent',
+              outline: 'none',
+              boxShadow: 'none',
+              border: 'none',
+            }}
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <Menu size={24} className="text-black" />
+          </button>
+        )}
 
-        <h1 className="text-xl font-semibold">{title}</h1>
+        {title && <h1 className="text-xl font-semibold">{title}</h1>}
       </div>
 
       <div className="flex items-center">

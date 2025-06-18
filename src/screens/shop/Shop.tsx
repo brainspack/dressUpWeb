@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../../components/Sidebar';
-import Header from '../../components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Eye, Edit, Trash2 } from 'lucide-react';
@@ -40,7 +38,6 @@ interface ShopData {
 }
 
 const Shop: React.FC = () => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isAddShopModalOpen, setIsAddShopModalOpen] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false); // 👈 New modal state
   const navigate = useNavigate();
@@ -57,10 +54,6 @@ const Shop: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [shopToDelete, setShopToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
-  };
 
   const fetchShops = async () => {
     setLoadingShops(true);
@@ -132,7 +125,7 @@ const Shop: React.FC = () => {
 
   return (
     <div
-      className="flex h-screen w-screen"
+      className="flex "
       style={{
         backgroundImage: `url('/assets/sidebar-bg.svg')`,
         backgroundSize: 'cover',
@@ -141,11 +134,7 @@ const Shop: React.FC = () => {
         backgroundColor: '#F2F7FE',
       }}
     >
-      <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={toggleSidebar} />
-
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Shops" onToggleSidebar={toggleSidebar} />
-
         <div className="flex-1 p-6 overflow-y-auto bg-white">
           {/* Metrics Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

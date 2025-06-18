@@ -14,7 +14,7 @@ const customerSchema = z.object({
     .string()
     .regex(/^\d+$/, { message: 'Only digits allowed.' })
     .min(10, { message: 'Must be at least 10 digits.' }),
-  address: z.string().min(5, { message: 'Address must be at least 5 characters.' }).nullable().optional(),
+  address: z.string().min(5, { message: 'Address must be at least 5 characters.' }).nullable().optional().or(z.literal('')),
 })
 
 type CustomerFormValues = z.infer<typeof customerSchema>
@@ -61,8 +61,8 @@ const NewCustomerForm: React.FC<NewCustomerFormProps> = ({
     defaultValues: {
       name: customerToEdit?.name || '',
       mobileNumber: customerToEdit?.mobileNumber || '',
-      address: customerToEdit?.address ?? undefined,
-    },
+      address: (customerToEdit?.address === null ? '' : customerToEdit?.address) || '',
+    } as CustomerFormValues,
   })
 
   // Sync react-hook-form inputs to Zustand store on every change
@@ -70,7 +70,7 @@ const NewCustomerForm: React.FC<NewCustomerFormProps> = ({
     if (customerToEdit) {
       setValue('name', customerToEdit.name);
       setValue('mobileNumber', customerToEdit.mobileNumber);
-      setValue('address', customerToEdit.address ?? undefined);
+      setValue('address', customerToEdit.address || '');
     } else {
       reset();
     }
@@ -118,59 +118,34 @@ const NewCustomerForm: React.FC<NewCustomerFormProps> = ({
       <h2 className="text-2xl font-bold mb-4">{customerToEdit ? 'Edit Customer' : 'Create New Customer'}</h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block mb-1 font-medium">
-            Name
-          </label>
-          <Input
-          // lbael="my knvhj"
-            id="name"
-            type="text"
-            placeholder="Enter name"
-            {...register('name')}
-            className={errors.name ? 'border-red-500' : ''}
-          />
-          {errors.name && (
-            <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-          )}
-        </div>
+        <Input
+          label="Name"
+          type="text"
+          placeholder="Enter name"
+          {...register('name')}
+          error={errors.name?.message}
+        />
 
-        <div>
-          <label htmlFor="mobileNumber" className="block mb-1 font-medium">
-            Mobile Number
-          </label>
-          <Input
-            id="mobileNumber"
-            type="text"
-            maxLength={10}
-            placeholder="Enter mobile number"
-            {...register('mobileNumber')}
-            onInput={(e) => {
-              const input = e.currentTarget
-              input.value = input.value.replace(/\D/g, '').slice(0, 10)
-            }}
-            className={errors.mobileNumber ? 'border-red-500' : ''}
-          />
-          {errors.mobileNumber && (
-            <p className="text-red-500 text-sm mt-1">{errors.mobileNumber.message}</p>
-          )}
-        </div>
+        <Input
+          label="Mobile Number"
+          type="text"
+          maxLength={10}
+          placeholder="Enter mobile number"
+          {...register('mobileNumber')}
+          error={errors.mobileNumber?.message}
+          onInput={(e) => {
+            const input = e.currentTarget
+            input.value = input.value.replace(/\D/g, '').slice(0, 10)
+          }}
+        />
 
-        <div>
-          <label htmlFor="address" className="block mb-1 font-medium">
-            Address
-          </label>
-          <Input
-            id="address"
-            type="text"
-            placeholder="Enter address"
-            {...register('address')}
-            className={errors.address ? 'border-red-500' : ''}
-          />
-          {errors.address && (
-            <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>
-          )}
-        </div>
+        <Input
+          label="Address"
+          type="text"
+          placeholder="Enter address"
+          {...register('address')}
+          error={errors.address?.message}
+        />
 
         {apiError && <p className="text-red-600 mb-2">{apiError}</p>}
 

@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '../../../components/ui/button'
 import { Input } from '../../../components/ui/input'
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../../components/ui/form'
 import { useShopFormStore } from '../../../store/useShopFormStore'
 import { baseApi } from '../../../api/baseApi'
 
@@ -85,54 +84,30 @@ const NewShopForm: React.FC<NewShopFormProps> = ({ onFormSubmitSuccess, editMode
       <h2 className="text-2xl font-bold mb-4">{editMode ? 'Edit Shop' : 'Create New Shop'}</h2>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Shop Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter shop name" {...field} />
-              </FormControl>
-              <FormMessage>{form.formState.errors.name?.message}</FormMessage>
-            </FormItem>
-          )}
+        <Input
+          label="Shop Name"
+          placeholder="Enter shop name"
+          {...form.register('name')}
+          error={form.formState.errors.name?.message}
         />
 
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter phone number"
-                  {...field}
-                  onInput={(e) => {
-                    const input = e.currentTarget
-                    input.value = input.value.replace(/\D/g, '').slice(0, 10)
-                    field.onChange(input.value)
-                  }}
-                />
-              </FormControl>
-              <FormMessage>{form.formState.errors.phone?.message}</FormMessage>
-            </FormItem>
-          )}
+        <Input
+          label="Phone Number"
+          placeholder="Enter phone number"
+          {...form.register('phone')}
+          error={form.formState.errors.phone?.message}
+          onInput={(e) => {
+            const input = e.currentTarget
+            input.value = input.value.replace(/\D/g, '').slice(0, 10)
+            form.setValue('phone', input.value)
+          }}
         />
 
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter address" {...field} />
-              </FormControl>
-              <FormMessage>{form.formState.errors.address?.message}</FormMessage>
-            </FormItem>
-          )}
+        <Input
+          label="Address"
+          placeholder="Enter address"
+          {...form.register('address')}
+          error={form.formState.errors.address?.message}
         />
 
         {apiError && <p className="text-red-500 text-sm">{apiError}</p>}

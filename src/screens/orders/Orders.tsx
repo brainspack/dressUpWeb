@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrderStore, Order, ClothingItem, CostItem, MeasurementItem } from '../../store/useOrderStore';
 import { Edit, Trash2, AlertCircle } from 'lucide-react';
-import Sidebar from '../../components/Sidebar';
-import Header from '../../components/Header';
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
@@ -24,7 +22,6 @@ const Orders = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -59,8 +56,6 @@ const Orders = () => {
     }
   };
 
-  const toggleSidebar = () => setIsSidebarCollapsed(!isSidebarCollapsed);
-
   const handleCreateOrder = (customerId: string, shopId: string) => {
     navigate(`/orders/new-order`, { state: { customerId, shopId } });
   };
@@ -68,10 +63,8 @@ const Orders = () => {
   const activeOrders = orders.filter(order => !order.deletedAt);
 
   return (
-    <div className="flex h-screen w-screen bg-[#F2F7FE]">
-      <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={toggleSidebar} />
+    <div className="flex  bg-[#F2F7FE]">
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Orders" onToggleSidebar={toggleSidebar} />
         <div className="flex-1 p-6 overflow-y-auto">
           {activeOrders.length === 0 && !loading && !error ? (
             <Card className="flex-1 flex flex-col items-center justify-center p-6 text-center shadow-lg rounded-lg bg-white">

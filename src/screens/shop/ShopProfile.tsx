@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../../components/Sidebar';
-import Header from '../../components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Mail, Phone, MapPin, User, Mail as MailIcon, Shirt, Users, Package, Truck, Clock, Edit, Trash2, Eye, PlusCircle } from 'lucide-react';
@@ -39,7 +37,6 @@ interface CustomerData {
 }
 
 const ShopProfile: React.FC = () => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -60,10 +57,6 @@ const ShopProfile: React.FC = () => {
   const [deleteType, setDeleteType] = useState<'customer' | 'tailor' | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
-  };
 
   const handleDeleteCustomer = async (customerId: string) => {
     setDeleteType('customer');
@@ -159,13 +152,10 @@ const ShopProfile: React.FC = () => {
   }, [id, fetchTailors, fetchCustomers]);
 
   return (
-    <div className="flex h-screen w-screen bg-[#F2F7FE]">
-      <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={toggleSidebar} />
-
+    <div className="flex bg-[#F2F7FE]">
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="px-6 pt-4">
         </div>
-        <Header title={shopData ? `${shopData.name} Profile` : 'Shop Profile'} onToggleSidebar={toggleSidebar} />
 
         <div className="flex-1 p-5 overflow-y-auto">
           <div className="mb-6">

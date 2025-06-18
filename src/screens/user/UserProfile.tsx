@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import Sidebar from '../../components/Sidebar';
-import Header from '../../components/Header';
 import { baseApi } from '../../api/baseApi';
 import useAuthStore, { User as AuthUser } from '../../store/useAuthStore';
 import { useUserStore } from '../../store/useUserStore'; // Import the new user store
@@ -20,12 +18,7 @@ interface UserData {
 const UserProfile: React.FC = () => {
   const currentUser: AuthUser = useAuthStore((state) => state.user);
   const { users, loading, error, fetchUsers } = useUserStore(); // Use the user store
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
-  };
 
   useEffect(() => {
     if (currentUser) {
@@ -41,7 +34,7 @@ const UserProfile: React.FC = () => {
 
   return (
     <div
-      className="flex h-screen w-screen"
+      className="flex"
       style={{
         backgroundImage: `url('/assets/sidebar-bg.svg')`,
         backgroundSize: 'cover',
@@ -50,11 +43,7 @@ const UserProfile: React.FC = () => {
         backgroundColor: '#F2F7FE',
       }}
     >
-      <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={toggleSidebar} />
-
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Header title="User Profiles" onToggleSidebar={toggleSidebar} />
-
         <div className="flex-1 p-6 overflow-y-auto" style={{ backgroundColor: 'white' }}>
           <div
             className="relative mb-6 p-6 rounded-lg flex items-center gap-2"

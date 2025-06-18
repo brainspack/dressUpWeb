@@ -27,8 +27,6 @@ import {
   DialogDescription,
 } from "../../components/ui/dialog";
 
-import Sidebar from '../../components/Sidebar';
-import Header from '../../components/Header';
 import useAuthStore, { User } from '../../store/useAuthStore';
 import { baseApi } from '../../api/baseApi';
 
@@ -47,7 +45,6 @@ interface CustomerData {
 
 const Customer: React.FC = () => {
   const user: User = useAuthStore((state) => state.user);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [customerToEdit, setCustomerToEdit] = useState<CustomerData | null>(null);
@@ -61,10 +58,6 @@ const Customer: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const navigate = useNavigate();
-
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
-  };
 
   // Use useCallback to memoize the fetch function
   const fetchCustomers = useCallback(async () => {
@@ -182,7 +175,7 @@ const Customer: React.FC = () => {
 
   return (
     <div
-      className="flex h-screen w-screen"
+      className="flex "
       style={{
         backgroundImage: `url('/assets/sidebar-bg.svg')`,
         backgroundSize: 'cover',
@@ -191,13 +184,8 @@ const Customer: React.FC = () => {
         backgroundColor: '#F2F7FE',
       }}
     >
-      {/* Sidebar */}
-      <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={toggleSidebar} />
-
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Customers" onToggleSidebar={toggleSidebar} />
-
         {/* Content Area */}
         <div
           className="flex-1 p-6 overflow-y-auto"

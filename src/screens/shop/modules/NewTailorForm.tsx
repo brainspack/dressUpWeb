@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
 import { useTailorStore } from '../../../store/useTailorStore';
 
 const tailorFormSchema = z.object({
@@ -96,29 +95,23 @@ const NewTailorForm: React.FC<NewTailorFormProps> = ({
       {loading && <p className="text-blue-500">Saving tailor...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
 
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="name" className="text-right">Tailor Name</Label>
-        <Input id="name" {...register('name')} className="col-span-3" />
-      </div>
-      {errors.name && (
-        <p className="text-red-500 text-sm col-span-4 text-right">
-          {errors.name.message}
-        </p>
-      )}
+      <Input
+        label="Tailor Name"
+        {...register('name')}
+        error={errors.name?.message}
+      />
 
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="mobileNumber" className="text-right">Phone Number</Label>
-        <Input id="mobileNumber"   maxLength={10} {...register('mobileNumber')} onKeyDown={(e) => {
-    if (!/[0-9]/.test(e.key) && e.key !== 'Backspace') {
-      e.preventDefault();
-    }
-  }} className="col-span-3" />
-      </div>
-      {errors.mobileNumber && (
-        <p className="text-red-500 text-sm col-span-4 text-right">
-          {errors.mobileNumber.message}
-        </p>
-      )}
+      <Input
+        label="Phone Number"
+        maxLength={10}
+        {...register('mobileNumber')}
+        error={errors.mobileNumber?.message}
+        onKeyDown={(e) => {
+          if (!/[0-9]/.test(e.key) && e.key !== 'Backspace') {
+            e.preventDefault();
+          }
+        }}
+      />
 
       <div className="flex justify-end space-x-2">
         <Button type="button" variant="blueGradient" onClick={handleCancel}>
