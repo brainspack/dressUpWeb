@@ -4,7 +4,9 @@ import { PropsWithChildren } from 'react'
 
 const PublicRoute = ({ children }: PropsWithChildren) => {
   const user = useAuthStore((state) => state.user)
-  return !user ? children : <Navigate to="/dashboard" />
+  // return !user ? children : <Navigate to="/dashboard" />
+
+  return <>{children}</>
 }
 
 export default PublicRoute

@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button'
 import React, { useState } from 'react'
 import { FiPhone } from 'react-icons/fi'
 import { baseApi } from '../../api/baseApi'
+import { useNavigate } from 'react-router-dom' 
 
 const loginSchema = z.object({
   phone: z.string()
@@ -24,6 +25,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   })
+
+  const navigate = useNavigate() 
+
   const [phone, setPhone] = React.useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [otp, setOtp] = useState('')
@@ -59,7 +63,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         method: 'POST',
         data: { mobileNumber: phone, otp },
       })
-      onLogin(phone)
+      if (res?.accessToken) {
+        localStorage.setItem('accessToken', res.accessToken)
+        navigate('/dashboard')
+        onLogin(phone)
+      } else {
+        throw new Error('Access token not received')
+      }
     } catch (err: any) {
       setOtpError(err.message || 'OTP verification failed')
     } finally {
@@ -104,15 +114,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               {isLoading ? 'Loading...' : 'Send OTP'}
             </Button>
             {apiError && <p className="text-red-500 mt-2">{apiError}</p>}
-            <button
+            <Button
               type="button"
-              className="w-full border border-[#6C4BC1] text-[#6C4BC1] rounded-md py-2 mt-1 hover:bg-[#f3f0fa] transition"
+              className="w-full border border-[#6C4BC1] text-[#ffffff] rounded-md py-2 mt-1 hover:bg-[#f3f0fa] transition"
               onClick={() => {
                 // Optionally handle signup navigation here
               }}
             >
               Not registered? Signup
-            </button>
+            </Button>
           </form>
         ) : (
           <form onSubmit={handleVerifyOtp} className="w-full mt-4">
@@ -131,14 +141,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             {otpError && <p className="text-red-500 text-sm mb-2">{otpError}</p>}
             <Button type="submit" className="w-full bg-[#6C4BC1] hover:bg-[#5a3ea6] text-white mb-3" disabled={otpLoading}>
               {otpLoading ? 'Verifying...' : 'Verify OTP'}
+             
             </Button>
-            <button
+            <Button
               type="button"
-              className="w-full border border-[#6C4BC1] text-[#6C4BC1] rounded-md py-2 mt-1 hover:bg-[#f3f0fa] transition"
+              className="w-full border border-[#6C4BC1] text-[#ffffff] rounded-md py-2 mt-1 hover:bg-[#f3f0fa] transition"
               onClick={() => { setOtpSent(false); setOtp(''); setOtpError(''); reset(); }}
             >
               Change Phone Number
-            </button>
+            </Button>
           </form>
         )}
       </div>
