@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { MainTabParamList } from '../navigation/types';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -16,6 +17,7 @@ const mockCustomers = [
 
 const Customers = () => {
   const navigation = useNavigation<CustomersScreenNavigationProp>();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [customers, setCustomers] = useState(mockCustomers);
 
@@ -39,13 +41,13 @@ const Customers = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Input
-          placeholder="Search customers..."
+          placeholder={t('customer.searchCustomer')}
           value={searchQuery}
           onChangeText={setSearchQuery}
           style={styles.searchInput}
         />
         <Button
-          title="Add Customer"
+          title={{ key: 'customer.addCustomer' }}
           onPress={() => {
             // Navigate to add customer screen
             // navigation.navigate('AddCustomer');
@@ -60,7 +62,7 @@ const Customers = () => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No customers found</Text>
+          <Text style={styles.emptyText}>{t('customer.noCustomers')}</Text>
         }
       />
     </View>

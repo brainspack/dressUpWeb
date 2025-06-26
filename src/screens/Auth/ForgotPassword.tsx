@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { AuthStackParamList } from '../../navigation/types';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
@@ -10,6 +11,7 @@ type ForgotPasswordScreenNavigationProp = NativeStackNavigationProp<AuthStackPar
 
 const ForgotPassword = () => {
   const navigation = useNavigation<ForgotPasswordScreenNavigationProp>();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
 
@@ -22,21 +24,21 @@ const ForgotPassword = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.form}>
         <Input
-          label="Email"
+          label={t('auth.email')}
           value={email}
           onChangeText={setEmail}
           error={emailError}
-          placeholder="Enter your email"
+          placeholder={t('auth.email')}
           keyboardType="email-address"
           autoCapitalize="none"
         />
         <Button
-          title="Reset Password"
+          title={{ key: 'auth.resetPassword' }}
           onPress={handleResetPassword}
           variant="primary"
         />
         <Button
-          title="Back to Login"
+          title={{ key: 'common.back' }}
           onPress={() => navigation.navigate('Login')}
           variant="secondary"
         />

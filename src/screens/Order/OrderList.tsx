@@ -4,10 +4,12 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { OrderStackParamList } from '../../navigation/types';
 import Button from '../../components/Button';
+import StatusDropdown from '../../components/StatusDropdown';
+// import LanguageSelector from '../../components/LanguageSelector';
+import { OrderStatus } from '../../types/order';
+import { useTranslation } from 'react-i18next';
 
 type OrderListScreenNavigationProp = NativeStackNavigationProp<OrderStackParamList, 'OrderList'>;
-
-type OrderStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
 
 interface Order {
   id: string;
@@ -27,6 +29,7 @@ interface Order {
 
 const OrderList = () => {
   const navigation = useNavigation<OrderListScreenNavigationProp>();
+  const { t } = useTranslation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | 'all'>('all');
@@ -51,13 +54,15 @@ const OrderList = () => {
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
       case 'pending':
-        return '#f57c00';
+        return '#f59e0b';
       case 'in_progress':
-        return '#1976d2';
-      case 'completed':
-        return '#2e7d32';
+        return '#3b82f6';
+      case 'ready':
+        return '#10b981';
+      case 'delivered':
+        return '#059669';
       case 'cancelled':
-        return '#d32f2f';
+        return '#ef4444';
       default:
         return '#666';
     }
@@ -67,75 +72,63 @@ const OrderList = () => {
     ? orders
     : orders.filter(order => order.status === selectedStatus);
 
+  const statusOptions = [
+    { label: t('status.all_orders'), value: 'all' as OrderStatus | 'all' },
+    { label: t('status.pending'), value: 'pending' as OrderStatus },
+    { label: t('status.in_progress'), value: 'in_progress' as OrderStatus },
+    { label: t('status.ready'), value: 'ready' as OrderStatus },
+    { label: t('status.delivered'), value: 'delivered' as OrderStatus },
+    { label: t('status.cancelled'), value: 'cancelled' as OrderStatus },
+  ];
+
   const renderOrderItem = ({ item }: { item: Order }) => (
     <TouchableOpacity
       style={styles.orderItem}
       onPress={() => navigation.navigate('OrderDetails', { orderId: item.id })}
     >
       <View style={styles.orderHeader}>
-        <Text style={styles.orderId}>Order #{item.id}</Text>
+        <Text style={styles.orderId}>{t('order.order')} #{item.id}</Text>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
           <Text style={styles.statusText}>
-            {item.status.replace('_', ' ').toUpperCase()}
+            {t(`status.${item.status}`)}
           </Text>
         </View>
       </View>
       <Text style={styles.customerName}>{item.customerName}</Text>
       <Text style={styles.orderDate}>
-        Ordered: {new Date(item.createdAt).toLocaleDateString()}
+        {t('order.ordered')}: {new Date(item.createdAt).toLocaleDateString()}
       </Text>
       {item.deliveryDate && (
         <Text style={styles.deliveryDate}>
-          Delivery: {new Date(item.deliveryDate).toLocaleDateString()}
+          {t('order.delivery')}: {new Date(item.deliveryDate).toLocaleDateString()}
         </Text>
       )}
-      <Text style={styles.totalAmount}>Total: ₹{item.totalAmount}</Text>
+      <Text style={styles.totalAmount}>{t('order.total')}: ₹{item.totalAmount}</Text>
     </TouchableOpacity>
-  );
-
-  const StatusFilter = () => (
-    <View style={styles.filterContainer}>
-      <Button
-        title="All"
-        onPress={() => setSelectedStatus('all')}
-        variant={selectedStatus === 'all' ? 'primary' : 'secondary'}
-      />
-      <Button
-        title="Pending"
-        onPress={() => setSelectedStatus('pending')}
-        variant={selectedStatus === 'pending' ? 'primary' : 'secondary'}
-      />
-      <Button
-        title="In Progress"
-        onPress={() => setSelectedStatus('in_progress')}
-        variant={selectedStatus === 'in_progress' ? 'primary' : 'secondary'}
-      />
-      <Button
-        title="Completed"
-        onPress={() => setSelectedStatus('completed')}
-        variant={selectedStatus === 'completed' ? 'primary' : 'secondary'}
-      />
-      <Button
-        title="Cancelled"
-        onPress={() => setSelectedStatus('cancelled')}
-        variant={selectedStatus === 'cancelled' ? 'primary' : 'secondary'}
-      />
-    </View>
   );
 
   return (
     <View style={styles.container}>
-      <Button
-        title="Create New Order"
-        onPress={() => navigation.navigate('AddOrder')}
-        variant="primary"
-        style={styles.addButton}
-      />
+      <View style={styles.header}>
+        <Button
+          title={t('order.create_new_order')}
+          onPress={() => navigation.navigate('AddOrder')}
+          variant="primary"
+          style={styles.addButton}
+        />
+        {/* LanguageSelector removed from here */}
+      </View>
 
-      <StatusFilter />
+      <View style={styles.filterContainer}>
+        <StatusDropdown
+          value={selectedStatus}
+          onChange={(status) => setSelectedStatus(status)}
+          options={statusOptions}
+        />
+      </View>
 
       {loading ? (
-        <Text style={styles.loading}>Loading orders...</Text>
+        <Text style={styles.loading}>{t('common.loading')}</Text>
       ) : (
         <FlatList
           data={filteredOrders}
@@ -143,7 +136,7 @@ const OrderList = () => {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No orders found</Text>
+            <Text style={styles.emptyText}>{t('common.no_data')}</Text>
           }
         />
       )}
@@ -156,13 +149,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
   addButton: {
-    margin: 16,
+    flex: 1,
+    marginRight: 8,
   },
   filterContainer: {
-    flexDirection: 'row',
     padding: 16,
-    gap: 8,
   },
   list: {
     padding: 16,

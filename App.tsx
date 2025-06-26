@@ -9,8 +9,8 @@ import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {LanguageProvider} from './src/context/LanguageContext';
-import './src/i18n/config';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './src/i18n/config';
 
 // Import screens
 import Home from './src/screens/Home';
@@ -25,6 +25,7 @@ import ClothesHistory from './src/screens/Clothes/ClothesHistory';
 import AddClothes from './src/screens/Clothes/AddClothes';
 import Login from './src/screens/Auth/Login';
 import Register from './src/screens/Auth/Register';
+import AccountScreen from './src/screens/Account/AccountScreen';
 
 // Import icons
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -45,6 +46,8 @@ const getTabBarIcon = (route: any, color: string, size: number) => {
     iconName = 'list';
   } else if (route.name === 'Clothes') {
     iconName = 'checkroom';
+  } else if (route.name === 'Account') {
+    iconName = 'account_circle';
   }
   return <Icon name={iconName} size={size} color={color} />;
 };
@@ -100,22 +103,22 @@ function MainTabs() {
       <Tab.Screen name="Customers" component={CustomerStackNavigator} options={{ headerShown: false }} />
       <Tab.Screen name="Orders" component={OrderStackNavigator} options={{ headerShown: false }} />
       <Tab.Screen name="Clothes" component={ClothesStackNavigator} options={{ headerShown: false }} />
+      <Tab.Screen name="Account" component={AccountScreen} options={{ title: 'Account' }} />
     </Tab.Navigator>
   );
 }
 
 function App(): React.JSX.Element {
-  // TODO: Add authentication state management
   const isAuthenticated = true;
 
   return (
-    <LanguageProvider>
+    <I18nextProvider i18n={i18n}>
       <NavigationContainer>
         {isAuthenticated 
         ? <MainTabs /> :
          <AuthStack />}
       </NavigationContainer>
-    </LanguageProvider>
+    </I18nextProvider>
   );
 }
 

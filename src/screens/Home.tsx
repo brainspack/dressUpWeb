@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { MainTabParamList } from '../navigation/types';
 import Button from '../components/Button';
 
@@ -9,29 +10,30 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Hom
 
 const Home = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { t } = useTranslation();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.section}>
-        <Text style={styles.title}>Welcome to DressUp</Text>
-        <Text style={styles.subtitle}>Your Fashion Management App</Text>
+        <Text style={styles.title}>DressUp</Text>
+        <Text style={styles.subtitle}>{t('common.appDescription')}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <Text style={styles.sectionTitle}>{t('common.quickActions')}</Text>
         <View style={styles.buttonGrid}>
           <Button
-            title="New Customer"
+            title={{ key: 'customer.addCustomer' }}
             onPress={() => navigation.navigate('Customers')}
             variant="primary"
           />
           <Button
-            title="New Order"
+            title={{ key: 'order.create_new_order' }}
             onPress={() => navigation.navigate('Orders')}
             variant="primary"
           />
           <Button
-            title="Add Clothes"
+            title={{ key: 'clothes.addClothes' }}
             onPress={() => navigation.navigate('Clothes')}
             variant="primary"
           />
@@ -39,10 +41,10 @@ const Home = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Activity</Text>
+        <Text style={styles.sectionTitle}>{t('common.recentActivity')}</Text>
         <View style={styles.activityList}>
           {/* Add your activity list items here */}
-          <Text style={styles.activityItem}>No recent activity</Text>
+          <Text style={styles.activityItem}>{t('common.no_data')}</Text>
         </View>
       </View>
     </ScrollView>

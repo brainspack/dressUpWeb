@@ -1,34 +1,35 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import useLanguageStore from '../store/languageStore';
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../context/LanguageContext';
 
-export const LanguageSelector = () => {
+const LanguageSelector = () => {
   const { t } = useTranslation();
-  const { currentLanguage, setAppLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguageStore();
 
   const languages = [
-    { code: 'en', label: t('settings.english') },
-    { code: 'hi', label: t('settings.hindi') },
+    { code: 'en', name: t('settings.english') },
+    { code: 'hi', name: t('settings.hindi') },
   ];
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t('settings.languageSelection')}</Text>
       {languages.map((lang) => (
         <TouchableOpacity
           key={lang.code}
           style={[
-            styles.languageButton,
-            currentLanguage === lang.code && styles.selectedLanguage,
+            styles.button,
+            language === lang.code && styles.selectedButton,
           ]}
-          onPress={() => setAppLanguage(lang.code)}
+          onPress={() => setLanguage(lang.code as 'en' | 'hi')}
         >
-          <Text style={[
-            styles.languageText,
-            currentLanguage === lang.code && styles.selectedLanguageText,
-          ]}>
-            {lang.label}
+          <Text
+            style={[
+              styles.buttonText,
+              language === lang.code && styles.selectedButtonText,
+            ]}
+          >
+            {lang.name}
           </Text>
         </TouchableOpacity>
       ))}
@@ -38,28 +39,29 @@ export const LanguageSelector = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  languageButton: {
-    padding: 12,
-    marginVertical: 4,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
+    backgroundColor: '#f3f4f6',
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
   },
-  selectedLanguage: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+  button: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginHorizontal: 4,
+    borderRadius: 4,
   },
-  languageText: {
-    fontSize: 16,
+  selectedButton: {
+    backgroundColor: '#3b82f6',
   },
-  selectedLanguageText: {
+  buttonText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  selectedButtonText: {
     color: '#fff',
   },
-}); 
+});
+
+export default LanguageSelector; 

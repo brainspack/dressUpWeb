@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { AuthStackParamList } from '../../navigation/types';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
@@ -10,6 +11,7 @@ type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, '
 
 const Login = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -24,34 +26,34 @@ const Login = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.form}>
         <Input
-          label="Email"
+          label={t('auth.email')}
           value={email}
           onChangeText={setEmail}
           error={emailError}
-          placeholder="Enter your email"
+          placeholder={t('auth.email')}
           keyboardType="email-address"
           autoCapitalize="none"
         />
         <Input
-          label="Password"
+          label={t('auth.password')}
           value={password}
           onChangeText={setPassword}
           error={passwordError}
-          placeholder="Enter your password"
+          placeholder={t('auth.password')}
           secureTextEntry
         />
         <Button
-          title="Login"
+          title={{ key: 'auth.login' }}
           onPress={handleLogin}
           variant="primary"
         />
         <Button
-          title="Forgot Password?"
+          title={{ key: 'auth.forgotPassword' }}
           onPress={() => navigation.navigate('ForgotPassword')}
           variant="secondary"
         />
         <Button
-          title="Create Account"
+          title={{ key: 'auth.signup' }}
           onPress={() => navigation.navigate('Register')}
           variant="secondary"
         />

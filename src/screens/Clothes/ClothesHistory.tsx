@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MainTabParamList } from '../../navigation/types';
+import { useTranslation } from 'react-i18next';
+import { ClothesStackParamList } from '../../navigation/types';
 import Button from '../../components/Button';
 
-type ClothesHistoryScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'ClothesHistory'>;
+type ClothesHistoryScreenNavigationProp = NativeStackNavigationProp<ClothesStackParamList, 'ClothesHistory'>;
 
 interface Clothes {
   id: string;
@@ -24,6 +25,7 @@ interface Clothes {
 
 const ClothesHistory = () => {
   const navigation = useNavigation<ClothesHistoryScreenNavigationProp>();
+  const { t } = useTranslation();
   const [clothes, setClothes] = useState<Clothes[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +49,10 @@ const ClothesHistory = () => {
   const renderClothesItem = ({ item }: { item: Clothes }) => (
     <TouchableOpacity
       style={styles.clothesItem}
-      onPress={() => navigation.navigate('ClothesDetails', { clothesId: item.id })}
+      onPress={() => {
+        // TODO: Add ClothesDetails to navigation stack
+        console.log('Navigate to clothes details:', item.id);
+      }}
     >
       {item.imageUri && (
         <Image
@@ -60,15 +65,15 @@ const ClothesHistory = () => {
         <Text style={styles.clothesType}>{item.type}</Text>
         <Text style={styles.clothesPrice}>₹{item.price}</Text>
         <View style={styles.clothesDetails}>
-          <Text style={styles.detail}>Size: {item.size}</Text>
-          <Text style={styles.detail}>Color: {item.color}</Text>
-          <Text style={styles.detail}>Material: {item.material}</Text>
+          <Text style={styles.detail}>{t('clothes.size')}: {item.size}</Text>
+          <Text style={styles.detail}>{t('clothes.color')}: {item.color}</Text>
+          <Text style={styles.detail}>{t('clothes.fabric')}: {item.material}</Text>
         </View>
         {item.notes && (
-          <Text style={styles.notes}>Notes: {item.notes}</Text>
+          <Text style={styles.notes}>{t('clothes.notes')}: {item.notes}</Text>
         )}
         <Text style={styles.date}>
-          Added: {new Date(item.createdAt).toLocaleDateString()}
+          {t('clothes.dateAdded')}: {new Date(item.createdAt).toLocaleDateString()}
         </Text>
       </View>
     </TouchableOpacity>
@@ -77,14 +82,14 @@ const ClothesHistory = () => {
   return (
     <View style={styles.container}>
       <Button
-        title="Add New Clothes"
+        title={{ key: 'clothes.addClothes' }}
         onPress={() => navigation.navigate('AddClothes')}
         variant="primary"
         style={styles.addButton}
       />
 
       {loading ? (
-        <Text style={styles.loading}>Loading clothes...</Text>
+        <Text style={styles.loading}>{t('common.loading')}</Text>
       ) : (
         <FlatList
           data={clothes}
@@ -92,7 +97,7 @@ const ClothesHistory = () => {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No clothes found</Text>
+            <Text style={styles.emptyText}>{t('clothes.noClothes')}</Text>
           }
         />
       )}

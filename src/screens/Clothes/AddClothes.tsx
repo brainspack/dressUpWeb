@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { MainTabParamList } from '../../navigation/types';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
@@ -24,6 +25,7 @@ interface ClothesForm {
 
 const AddClothes = () => {
   const navigation = useNavigation<AddClothesScreenNavigationProp>();
+  const { t } = useTranslation();
   const [form, setForm] = useState<ClothesForm>({
     name: '',
     type: '',
@@ -37,15 +39,15 @@ const AddClothes = () => {
 
   const validateForm = () => {
     if (!form.name.trim()) {
-      Alert.alert('Error', 'Name is required');
+      Alert.alert(t('common.error'), t('validation.required'));
       return false;
     }
     if (!form.type.trim()) {
-      Alert.alert('Error', 'Type is required');
+      Alert.alert(t('common.error'), t('validation.required'));
       return false;
     }
     if (!form.price.trim()) {
-      Alert.alert('Error', 'Price is required');
+      Alert.alert(t('common.error'), t('validation.required'));
       return false;
     }
     return true;
@@ -81,10 +83,10 @@ const AddClothes = () => {
 
       if (!response.ok) throw new Error('Failed to add clothes');
 
-      Alert.alert('Success', 'Clothes added successfully');
+      Alert.alert(t('common.success'), t('clothes.addSuccess'));
       navigation.goBack();
     } catch (error) {
-      Alert.alert('Error', 'Failed to add clothes. Please try again.');
+      Alert.alert(t('common.error'), t('clothes.addError'));
     } finally {
       setLoading(false);
     }
@@ -94,61 +96,61 @@ const AddClothes = () => {
     <ScrollView style={styles.container}>
       <View style={styles.form}>
         <Input
-          label="Name"
+          label={t('clothes.name')}
           value={form.name}
           onChangeText={(text) => setForm({ ...form, name: text })}
-          placeholder="Enter clothes name"
+          placeholder={t('clothes.name')}
         />
         <Input
-          label="Type"
+          label={t('clothes.type')}
           value={form.type}
           onChangeText={(text) => setForm({ ...form, type: text })}
-          placeholder="Enter clothes type"
+          placeholder={t('clothes.type')}
         />
         <Input
-          label="Description"
+          label={t('clothes.description')}
           value={form.description}
           onChangeText={(text) => setForm({ ...form, description: text })}
-          placeholder="Enter description"
+          placeholder={t('clothes.description')}
           multiline
         />
         <Input
-          label="Price"
+          label={t('clothes.price')}
           value={form.price}
           onChangeText={(text) => setForm({ ...form, price: text })}
-          placeholder="Enter price"
+          placeholder={t('clothes.price')}
           keyboardType="numeric"
         />
         <Input
-          label="Size"
+          label={t('clothes.size')}
           value={form.size}
           onChangeText={(text) => setForm({ ...form, size: text })}
-          placeholder="Enter size"
+          placeholder={t('clothes.size')}
         />
         <Input
-          label="Color"
+          label={t('clothes.color')}
           value={form.color}
           onChangeText={(text) => setForm({ ...form, color: text })}
-          placeholder="Enter color"
+          placeholder={t('clothes.color')}
         />
         <Input
-          label="Material"
+          label={t('clothes.fabric')}
           value={form.material}
           onChangeText={(text) => setForm({ ...form, material: text })}
-          placeholder="Enter material"
+          placeholder={t('clothes.fabric')}
         />
 
         <View style={styles.mediaSection}>
-          <Text style={styles.sectionTitle}>Media</Text>
+          <Text style={styles.sectionTitle}>{t('clothes.media')}</Text>
           <View style={styles.mediaButtons}>
             <MediaUploader
-              label="Add Image"
+              label={t('clothes.addImage')}
               value={form.imageUri}
               onChange={uri => setForm({ ...form, imageUri: uri })}
               type="image"
             />
             <MediaUploader
-              label="Add Video"
+              label={t('clothes.addVideo')}
               value={form.videoUri}
               onChange={uri => setForm({ ...form, videoUri: uri })}
               type="video"
@@ -157,15 +159,15 @@ const AddClothes = () => {
         </View>
 
         <Input
-          label="Notes"
+          label={t('clothes.notes')}
           value={form.notes}
           onChangeText={(text) => setForm({ ...form, notes: text })}
-          placeholder="Enter any additional notes"
+          placeholder={t('clothes.notes')}
           multiline
         />
 
         <Button
-          title="Add Clothes"
+          title={{ key: 'clothes.addClothes' }}
           onPress={handleSubmit}
           variant="primary"
           style={styles.submitButton}
@@ -206,4 +208,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddClothes; 
+export default AddClothes;

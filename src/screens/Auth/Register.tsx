@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { AuthStackParamList } from '../../navigation/types';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
@@ -10,6 +11,7 @@ type RegisterScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList
 
 const Register = () => {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,45 +30,45 @@ const Register = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.form}>
         <Input
-          label="Full Name"
+          label={t('profile.name')}
           value={name}
           onChangeText={setName}
           error={nameError}
-          placeholder="Enter your full name"
+          placeholder={t('profile.name')}
           autoCapitalize="words"
         />
         <Input
-          label="Email"
+          label={t('auth.email')}
           value={email}
           onChangeText={setEmail}
           error={emailError}
-          placeholder="Enter your email"
+          placeholder={t('auth.email')}
           keyboardType="email-address"
           autoCapitalize="none"
         />
         <Input
-          label="Password"
+          label={t('auth.password')}
           value={password}
           onChangeText={setPassword}
           error={passwordError}
-          placeholder="Enter your password"
+          placeholder={t('auth.password')}
           secureTextEntry
         />
         <Input
-          label="Confirm Password"
+          label={t('auth.confirmPassword')}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           error={confirmPasswordError}
-          placeholder="Confirm your password"
+          placeholder={t('auth.confirmPassword')}
           secureTextEntry
         />
         <Button
-          title="Register"
+          title={{ key: 'auth.signup' }}
           onPress={handleRegister}
           variant="primary"
         />
         <Button
-          title="Already have an account? Login"
+          title={{ key: 'auth.login' }}
           onPress={() => navigation.navigate('Login')}
           variant="secondary"
         />
