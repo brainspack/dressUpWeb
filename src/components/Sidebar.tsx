@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Home, ShoppingBag, Store, Package, LayoutGrid,
-  FileText, Bell, Calendar, Users, Star, UserPen, LogOut
+  Home, ShoppingBag, Store, Users,UserPen, LogOut,Scissors
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore'; // Adjust path if needed
+import { Button } from './ui/button';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -18,14 +18,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
 
   const navItems = [
     { icon: Home, text: 'Dashboard', link: '/dashboard' },
-    { icon: ShoppingBag, text: 'Orders', link: '/orders' },
     { icon: Store, text: 'Shops', link: '/shop' },
     { icon: Users, text: 'Customers', link: '/customer' },
+    { icon: Scissors, text: 'Tailors', link: '/tailors' },
+    { icon: ShoppingBag, text: 'Orders', link: '/orders' },
     { icon: UserPen, text: 'Users Profile', link: '/userprofile' },
-    // { icon: FileText, text: 'Forms', link: '/forms' },
-    // { icon: Bell, text: 'Notifications', link: '/notifications' },
-    // { icon: Calendar, text: 'Calendar', link: '/calendar' },
-    // { icon: Star, text: 'Reviews', link: '/reviews' },
   ];
 
   const handleLogout = () => {
@@ -59,17 +56,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
                   to={item.link}
                   className={`flex items-center p-2 rounded-md transition-colors ${
                     isActive 
-                      ? 'bg-blue-100 text-blue-600 hover:bg-blue-100' 
-                      : 'hover:bg-gray-100'
+                      ? 'bg-green-100 bg-[#55AC8A] hover:bg-blue-100' 
+                      : 'hover:bg-green-100'
                   } ${isCollapsed ? 'justify-center' : 'justify-start'}`}
                   title={isCollapsed ? item.text : ''}
                 >
                   <item.icon 
-                    className={`${isCollapsed ? 'mr-0' : 'mr-3'} ${isActive ? 'text-blue-600' : ''}`} 
+                    className={`${isCollapsed  ? 'mr-0 text-[#55AC8A]' : 'mr-3 text-[#55AC8A]'} ${isActive ? 'text-[#56B299]' : ''}`} 
                     size={20} 
                   />
                   {!isCollapsed && (
-                    <span className={`whitespace-nowrap ${isActive ? 'font-medium' : ''}`}>
+                    <span className={` text-[#55AC8A] whitespace-nowrap ${isActive ? 'font-medium' : ''}`}>
                       {item.text}
                     </span>
                   )}
@@ -82,15 +79,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
 
       {/* Logout Button */}
       <div className="p-4 border-t border-gray-200 w-full">
-        <button
+        <Button
+           variant= "mintGreen"
           onClick={handleLogout}
-          className={`w-full flex items-center text-sm text-white bg-red-600 rounded-md px-3 py-2 hover:bg-red-700 transition-colors ${isCollapsed ? 'justify-center' : 'justify-start gap-2'
+          className={`w-full flex items-center text-sm text-white  ${isCollapsed ? 'justify-center' : 'justify-start gap-2'
             }`}
           title="Logout"
         >
           <LogOut size={20} className="min-w-[20px] min-h-[20px]" />
           {!isCollapsed && <span className="ml-2">Logout</span>}
-        </button>
+        </Button>
 
 
       </div>

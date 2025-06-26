@@ -1,3 +1,4 @@
+// This file is not needed for logged-in user info. Use useAuthStore for current user.
 import { create } from 'zustand';
 import { baseApi } from '../api/baseApi';
 

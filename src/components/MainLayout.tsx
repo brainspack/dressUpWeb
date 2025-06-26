@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import Breadcrumb from './Breadcrumb';
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -14,8 +15,10 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header always full width */}
         <Header onToggleSidebar={toggleSidebar} />
+        {/* Breadcrumb navigation */}
+        <div className="px-4 pt-2"><Breadcrumb /></div>
         {/* Main content centered and constrained */}
-        <div className="flex-1 w-full overflow-auto p-4">
+        <div className="flex-1 w-full overflow-auto ">
           {children}
         </div>
       </div>

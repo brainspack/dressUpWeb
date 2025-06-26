@@ -6,6 +6,7 @@ import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationM
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import Tooltip from '../../components/ui/tooltip';
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ const Orders = () => {
   }, [fetchOrders]);
 
   const handleEditOrder = (order: Order) => {
-    console.log('Navigating to edit order:', order.id);
+   
     // Simply navigate to the edit route - the useOrderHook will fetch the data from API
     navigate(`/orders/edit/${order.id}`);
   };
@@ -76,7 +77,7 @@ const Orders = () => {
               </CardContent>
               <CardFooter>
                 <Button
-                  variant="blueGradient"
+                  variant="mintGreen"
                   onClick={() => navigate('/customer')}
                 >
                   Add New Order
@@ -87,7 +88,7 @@ const Orders = () => {
             <>
               <div className="flex justify-between items-center mb-6">
                 <Button
-                  variant="blueGradient"
+                  variant="mintGreen"
                   onClick={() => navigate('/customer')}
                 >
                   Add New Order
@@ -103,30 +104,30 @@ const Orders = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Customer Name</TableHead>
-                          <TableHead>Tailor Name</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Order Date</TableHead>
-                          <TableHead>Delivery Date</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="w-1/6">Customer Name</TableHead>
+                          <TableHead className="w-1/6">Tailor Name</TableHead>
+                          <TableHead className="w-1/6">Status</TableHead>
+                          <TableHead className="w-1/6">Order Date</TableHead>
+                          <TableHead className="w-1/6">Delivery Date</TableHead>
+                          <TableHead className="w-1/6">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {activeOrders.map((order, index) => (
                           <TableRow key={order.id}>
-                            <TableCell className="font-medium">{order.customer.name}</TableCell>
-                            <TableCell>{order.tailorName}</TableCell>
-                            <TableCell>{order.status}</TableCell>
-                            <TableCell>{order.orderDate ? new Date(order.orderDate).toLocaleDateString() : 'N/A'}</TableCell>
-                            <TableCell>{order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : 'N/A'}</TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button variant="blueGradient" size="sm" onClick={() => handleEditOrder(order)}>
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button variant="blueGradient" size="sm" onClick={() => handleDeleteOrder(order.id)}>
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                            <TableCell className="w-1/6 font-medium">{order.customer.name}</TableCell>
+                            <TableCell className="w-1/6">{order.tailorName}</TableCell>
+                            <TableCell className="w-1/6">{order.status}</TableCell>
+                            <TableCell className="w-1/6">{order.orderDate ? new Date(order.orderDate).toLocaleDateString() : 'N/A'}</TableCell>
+                            <TableCell className="w-1/6">{order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : 'N/A'}</TableCell>
+                            <TableCell className="w-1/6">
+                              <div className="flex gap-5">
+                                <Tooltip text="Edit Order">
+                                  <Edit className="w-5 h-5 text-[#55AC9A]" onClick={() => handleEditOrder(order)}/>
+                                </Tooltip>
+                                <Tooltip text="Delete Order">
+                                  <Trash2 className="w-4 h-4 text-[#55AC9A]" onClick={() => handleDeleteOrder(order.id)}/>
+                                </Tooltip>
                               </div>
                             </TableCell>
                           </TableRow>

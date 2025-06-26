@@ -78,10 +78,13 @@ const Header: React.FC<HeaderProps> = ({ title, onToggleSidebar }) => {
         {/* User Profile */}
         <div className="flex items-center ml-6">
           <span className="mr-2 text-sm font-medium">
-            {user?.phone ? 'Sally Esparza' : 'User'}
+            {user?.role ? user.role : 'User'}
+          </span>
+          <span className="mr-2 text-xs text-gray-500">
+            {user?.mobileNumber ? user.mobileNumber : ''}
           </span>
           <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-semibold">
-            {user?.phone ? (user.phone.slice(0, 2).toUpperCase() || 'SE') : 'SE'}
+            {user?.mobileNumber ? (user.mobileNumber.slice(0, 2).toUpperCase() || 'SE') : 'SE'}
           </div>
         </div>
       </div>

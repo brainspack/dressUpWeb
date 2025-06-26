@@ -82,10 +82,10 @@ const UserProfile: React.FC = () => {
               filteredUsers.map((user) => (
                 <Card
                   key={user.id}
-                  className="flex items-center justify-between p-4 hover:shadow-md transition-shadow"
+                  className="flex items-center justify-between p-4 hover:shadow-md transition-shadow bg-green-100"
                 >
                   <div className="flex items-center min-w-0 flex-1">
-                    <div className="w-12 h-12 rounded-full bg-gray-300 mr-4 flex-shrink-0" />
+                    <div className="w-12 h-12 rounded-full bg-[#55AC8A] mr-4 flex-shrink-0 flex items-center justify-center text-white" >S/A</div>
                     <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
                       <CardTitle className="text-base font-semibold mb-1 truncate">
                         {user.name || 'N/A'}

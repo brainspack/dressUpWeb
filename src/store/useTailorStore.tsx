@@ -3,6 +3,7 @@ import { baseApi } from '../api/baseApi';
 
 interface Tailor {
   id: string;
+  serialNumber: number;
   name: string;
   mobileNumber: string;
   shopId: string;
@@ -14,6 +15,7 @@ interface TailorState {
   error: string | null;
   addTailor: (tailorData: { name: string; mobileNumber: string; shopId: string }) => Promise<void>;
   fetchTailors: (shopId: string) => Promise<void>;
+  fetchAllTailors: () => Promise<void>;
   updateTailor: (id: string, data: Partial<Tailor>) => Promise<void>;
 }
 
@@ -48,6 +50,17 @@ export const useTailorStore = create<TailorState>((set) => ({
     } catch (err: any) {
       console.error('Error fetching tailors:', err);
       set({ error: err.message || 'Failed to fetch tailors', loading: false });
+    }
+  },
+
+  fetchAllTailors: async () => {
+    set({ loading: true, error: null });
+    try {
+      const response = await baseApi(`/tailors`, { method: 'GET' });
+      set({ tailors: response as Tailor[], loading: false });
+    } catch (err: any) {
+      console.error('Error fetching all tailors:', err);
+      set({ error: err.message || 'Failed to fetch all tailors', loading: false });
     }
   },
 

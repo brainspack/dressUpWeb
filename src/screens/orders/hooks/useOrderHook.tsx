@@ -63,23 +63,11 @@ export const useOrderHook = ({
   // Get state from navigation if available
   const navigationState = location.state as { order?: OrderFormData; customerId?: string; shopId?: string } | null;
 
-  // Add debug logging for initial data
-  console.log('useOrderHook - Initial Props:', {
-    propInitialData,
-    locationState: location.state,
-    params
-  });
-
+  
   // Determine if we're in edit mode and get the order data
   const isEditMode = Boolean(params.id);
   
-  // Log the navigation state and edit mode status
-  console.log('useOrderHook - Edit Mode Check:', {
-    isEditMode,
-    orderId: params.id,
-    navigationState,
-    hasOrderData: Boolean(navigationState?.order)
-  });
+  
 
   // Function to fetch order data from API
   const fetchOrderData = useCallback(async (id: string) => {
@@ -87,7 +75,7 @@ export const useOrderHook = ({
     setFormError(null);
     try {
       const response = await baseApi(`/orders/${id}`, { method: 'GET' });
-      console.log('Fetched order data from API:', response);
+    
       
       if (!response) {
         throw new Error('No order data received from server');
@@ -107,12 +95,7 @@ export const useOrderHook = ({
           // Use measurements that are nested within this clothing item
           const itemMeasurements = item.measurements || [];
           
-          console.log(`Processing clothing item "${item.type}":`, {
-            itemId: item.id,
-            measurementsCount: itemMeasurements.length,
-            measurements: itemMeasurements
-          });
-          
+        
           // Create a single measurement object for the form
           const measurement = itemMeasurements.length > 0 ? {
             height: itemMeasurements[0]?.height ?? null,
@@ -123,6 +106,14 @@ export const useOrderHook = ({
             sleeveLength: itemMeasurements[0]?.sleeveLength ?? null,
             inseam: itemMeasurements[0]?.inseam ?? null,
             neck: itemMeasurements[0]?.neck ?? null,
+            armhole: itemMeasurements[0]?.armhole ?? null,
+            bicep: itemMeasurements[0]?.bicep ?? null,
+            wrist: itemMeasurements[0]?.wrist ?? null,
+            outseam: itemMeasurements[0]?.outseam ?? null,
+            thigh: itemMeasurements[0]?.thigh ?? null,
+            knee: itemMeasurements[0]?.knee ?? null,
+            calf: itemMeasurements[0]?.calf ?? null,
+            ankle: itemMeasurements[0]?.ankle ?? null,
           } : {
             height: null,
             chest: null,
@@ -132,6 +123,14 @@ export const useOrderHook = ({
             sleeveLength: null,
             inseam: null,
             neck: null,
+            armhole: null,
+            bicep: null,
+            wrist: null,
+            outseam: null,
+            thigh: null,
+            knee: null,
+            calf: null,
+            ankle: null,
           };
 
           return {
@@ -151,12 +150,6 @@ export const useOrderHook = ({
         }))
       };
 
-      console.log('Transformed order data for form:', orderData);
-      console.log('Final clothes structure with measurements:', orderData.clothes.map((item, index) => ({
-        index,
-        type: item.type,
-        measurements: item.measurements
-      })));
       return orderData;
     } catch (err: any) {
       console.error('Error fetching order data:', err);
@@ -170,40 +163,29 @@ export const useOrderHook = ({
 
   // Combine initial data sources
   const initialData = useMemo(() => {
-    console.log('useOrderHook - Combining initial data sources:', {
-      propInitialData,
-      navigationStateOrder: navigationState?.order,
-      isEditMode
-    });
+  
 
     // If we have prop initialData, use it
     if (propInitialData) {
-      console.log('Using prop initialData:', propInitialData);
+     
       return propInitialData;
     }
 
     // If we're in edit mode, we'll fetch from API instead of using navigation state
     if (isEditMode) {
-      console.log('In edit mode - will fetch from API');
+    
       return undefined; // We'll fetch this from API
     }
 
     // If in edit mode (order data from navigation state), use that (fallback)
     if (navigationState?.order) {
-      console.log('Using navigationState.order for form:', navigationState.order);
-      console.log('Measurements in navigationState:', navigationState.order.clothes?.map(c => c.measurements));
-      setIsFormInitialized(true);
-      return navigationState.order;
-    }
-
-    // For new orders, return undefined to use default values
-    console.log('No initial data available, will use default values');
+    
+    
+   
     return undefined;
   }, [propInitialData, navigationState, isEditMode]);
 
-  // Log the final initialData that will be used
-  console.log('useOrderHook - Final initialData for form:', initialData);
-
+  
   const {
     register,
     control,
@@ -215,7 +197,7 @@ export const useOrderHook = ({
   } = useForm<OrderFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: useMemo(() => {
-      console.log('Form initialization - Using initialData:', initialData);
+     
       
       if (initialData) {
         // Ensure measurements are properly structured
@@ -245,18 +227,14 @@ export const useOrderHook = ({
           })) || []
         };
         
-        console.log('Structured form data with measurements:', formData);
+     
         setIsFormInitialized(true);
         return formData;
       }
 
       // If in edit mode (order data from navigation state), use that
       if (navigationState?.order) {
-        console.log('Using navigationState.order for form:', navigationState.order);
-        console.log('Measurements in navigationState:', navigationState.order.clothes?.map(c => c.measurements));
-        setIsFormInitialized(true);
-        return navigationState.order;
-      }
+       
 
       // For new order, try to get customerId and shopId from navigationState or URL params
       const customerId = navigationState?.customerId || new URLSearchParams(location.search).get('customerId') || '';
@@ -299,7 +277,7 @@ export const useOrderHook = ({
         costs: [{ materialCost: 0, laborCost: 0, totalCost: 0 }],
       };
 
-      console.log('Using default form data:', formData);
+   
       setIsFormInitialized(true);
       return formData;
     }, [initialData, navigationState, location.search, isFormInitialized]),
@@ -318,23 +296,23 @@ export const useOrderHook = ({
   // Memoize the fetchShopId function
   const fetchShopId = useCallback(async () => {
     const currentShopId = watch('shopId');
-    console.log('fetchShopId called, current shopId:', currentShopId);
+ 
     
     // Only fetch shop ID if not already set
     if (!currentShopId || currentShopId === '') {
-      console.log('ShopId not set, fetching from API...');
+    
       setLoadingShopId(true);
       setShopIdError(null);
       try {
         const response = await baseApi('/shops/my-shops', { method: 'GET' });
-        console.log('Shops API response:', response);
+      
         
         if (Array.isArray(response) && response.length > 0) {
           const fetchedShopId = response[0].id;
-          console.log('Setting shopId to:', fetchedShopId);
+         
           setValue('shopId', fetchedShopId);
         } else {
-          console.log('No shops found in response');
+        
           setShopIdError('No shop found for current user.');
         }
       } catch (err: any) {
@@ -344,7 +322,7 @@ export const useOrderHook = ({
         setLoadingShopId(false);
       }
     } else {
-      console.log('ShopId already set, skipping fetch:', currentShopId);
+     
       setLoadingShopId(false);
     }
   }, [setValue, watch]);
@@ -371,7 +349,7 @@ export const useOrderHook = ({
         }));
         setTailors(tailorOptions);
         hasFetchedTailors.current = true;
-        console.log('Tailors fetched successfully:', tailorOptions);
+      
       } else {
         throw new Error('Invalid response format for tailors');
       }
@@ -416,14 +394,11 @@ export const useOrderHook = ({
   };
 
   const onSubmit = async (data: OrderFormData) => {
-    console.log('=== onSubmit function called ===');
-    console.log('Form data received:', data);
-    console.log('Form errors:', errors);
+  
+   
     
     try {
-      console.log('Submitting form data:', data);
-      console.log('Measurements in form data:', data.clothes.map(c => c.measurements));
-      console.log('Is edit mode:', !!orderId);
+    
 
       // Validate and format dates
       const validateAndFormatDate = (dateString: string | null | undefined): string | null => {
@@ -449,7 +424,7 @@ export const useOrderHook = ({
         measurements: data.clothes
           .flatMap(cloth => {
             const measurementValues = cloth.measurements?.[0];
-            console.log('Processing measurements for cloth:', cloth.type, measurementValues);
+         
             
             // Always create a measurement object, even if measurementValues is undefined
             const formattedMeasurement = {
@@ -461,9 +436,17 @@ export const useOrderHook = ({
               sleeveLength: measurementValues?.sleeveLength ?? null,
               inseam: measurementValues?.inseam ?? null,
               neck: measurementValues?.neck ?? null,
+              armhole: measurementValues?.armhole ?? null,
+              bicep: measurementValues?.bicep ?? null,
+              wrist: measurementValues?.wrist ?? null,
+              outseam: measurementValues?.outseam ?? null,
+              thigh: measurementValues?.thigh ?? null,
+              knee: measurementValues?.knee ?? null,
+              calf: measurementValues?.calf ?? null,
+              ankle: measurementValues?.ankle ?? null,
             };
 
-            console.log('Formatted measurement for', cloth.type, ':', formattedMeasurement);
+         
             // Always return the measurement, even if all values are null
             return [formattedMeasurement];
           }),
@@ -476,19 +459,18 @@ export const useOrderHook = ({
         deliveryDate: validateAndFormatDate(data.deliveryDate),
       };
 
-      console.log('Final measurements array:', orderData.measurements);
-      console.log('Sending order data:', JSON.stringify(orderData, null, 2));
+    
 
       let response;
       if (orderId) {
-        console.log('Updating existing order:', orderId);
+     
         response = await baseApi(`/orders/${orderId}`, {
           method: 'PATCH',
           data: orderData,
         });
-        console.log('response:', response)
+       
       } else {
-        console.log('Creating new order');
+       
         response = await baseApi('/orders', {
           method: 'POST',
           data: orderData,
@@ -500,7 +482,7 @@ export const useOrderHook = ({
         throw new Error('No response received from server');
       }
 
-      console.log('Order saved successfully:', response);
+   
       onFormSubmitSuccess?.();
       navigate('/orders');
 
@@ -561,6 +543,14 @@ export const useOrderHook = ({
           sleeveLength: null,
           inseam: null,
           neck: null,
+          armhole: null,
+          bicep: null,
+          wrist: null,
+          outseam: null,
+          thigh: null,
+          knee: null,
+          calf: null,
+          ankle: null,
         }]
       });
     } else {

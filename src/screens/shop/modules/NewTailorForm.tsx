@@ -71,10 +71,10 @@ const NewTailorForm: React.FC<NewTailorFormProps> = ({
 
       if (tailorToEdit) {
         await updateTailor(tailorToEdit.id, payload);
-        console.log('Tailor updated successfully via Zustand');
+      
       } else {
         await addTailor(payload);
-        console.log('Tailor added successfully via Zustand');
+       
       }
 
       onFormSubmitSuccess();
@@ -114,7 +114,7 @@ const NewTailorForm: React.FC<NewTailorFormProps> = ({
       />
 
       <div className="flex justify-end space-x-2">
-        <Button type="button" variant="blueGradient" onClick={handleCancel}>
+        <Button type="button" variant="mintGreen" onClick={handleCancel}>
           Cancel
         </Button>
         <Button type="submit" disabled={loading}>

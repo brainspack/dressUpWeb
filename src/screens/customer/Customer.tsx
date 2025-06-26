@@ -10,7 +10,10 @@ import {
   Bell,
   Edit,
   Trash2,
-  PlusCircle
+  PlusCircle,
+  BaggageClaim,
+  Eye,
+  X
 } from 'lucide-react';
 
 // Import Shadcn UI components
@@ -33,6 +36,7 @@ import { baseApi } from '../../api/baseApi';
 // Import the NewCustomerForm component (NewOrderForm is not rendered here directly anymore)
 import NewCustomerForm from './modules/NewCustomerForm';
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
+import Tooltip from '../../components/ui/tooltip';
 
 interface CustomerData {
   id: string;
@@ -64,9 +68,7 @@ const Customer: React.FC = () => {
     setLoadingCustomers(true);
     setErrorFetchingCustomers(null);
     try {
-      console.log('🔍 Fetching customers...');
-      console.log('👤 Current user:', user);
-      
+   
       const response = await baseApi('/customers/my-customers', { 
         method: 'GET',
         onError: (error) => {
@@ -81,26 +83,18 @@ const Customer: React.FC = () => {
         }
       });
       
-      console.log('📦 Raw API Response:', response);
+   
       
       if (Array.isArray(response)) {
-        console.log('✅ Customers fetched successfully:', response);
-        console.log('📊 Number of customers:', response.length);
-        console.log('🔍 First customer data:', response[0]);
+      
         setCustomers(response as CustomerData[]);
       } else {
-        console.error('❌ Unexpected response format:', response);
-        console.error('📝 Response type:', typeof response);
-        console.error('🔍 Response structure:', JSON.stringify(response, null, 2));
+       
         setErrorFetchingCustomers('Invalid response format from server');
       }
     } catch (error: any) {
-      console.error('❌ Error fetching customers:', error);
-      console.error('🔍 Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+     
+       
       setErrorFetchingCustomers(error.message || 'Failed to fetch customers');
     } finally {
       setLoadingCustomers(false);
@@ -119,7 +113,7 @@ const Customer: React.FC = () => {
     setIsDeleting(true);
     try {
       await baseApi(`/customers/${customerToDelete}`, { method: 'DELETE' });
-      console.log(`Customer with ID ${customerToDelete} soft-deleted.`);
+   
       fetchCustomers(); // Refresh the customer list after successful deletion
     } catch (error: any) {
       console.error('Error soft-deleting customer:', error);
@@ -145,13 +139,13 @@ const Customer: React.FC = () => {
   // Fetch customers on component mount and when user changes
   useEffect(() => {
     if (user) {
-      console.log('User authenticated, fetching customers...');
+    
       fetchCustomers();
     }
   }, [user, fetchCustomers]);
 
   const handleCustomerCreated = async () => {
-    console.log('Customer created, refreshing list...');
+  
     setIsAddModalOpen(false);
     await fetchCustomers(); // Wait for the fetch to complete
   };
@@ -205,7 +199,7 @@ const Customer: React.FC = () => {
                   className="flex-grow max-w-xs px-3 py-2 rounded-l-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 bg-white"
                 />
                 <Button
-                  variant="blueGradient"
+                  variant="mintGreen"
                   className="text-white px-6 py-2 rounded-r-md whitespace-nowrap"
                   onClick={() => setIsAddModalOpen(true)}
                 >
@@ -229,48 +223,36 @@ const Customer: React.FC = () => {
               {!loadingCustomers && !errorFetchingCustomers && filteredCustomers.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-full bg-white rounded-lg shadow-md">
-                    <thead className="bg-gray-200">
+                    <thead className="bg-blue-100">
                       <tr>
-                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Name</th>
-                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Mobile Number</th>
-                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Address</th>
-                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 w-1/4">Name</th>
+                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 w-1/4">Mobile Number</th>
+                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 w-1/4">Address</th>
+                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 w-1/4">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredCustomers.map((customer) => (
                         <tr key={customer.id} className="border-b border-gray-200 hover:bg-gray-50">
-                          <td className="py-3 px-4 text-sm text-gray-800">{customer.name}</td>
-                          <td className="py-3 px-4 text-sm text-gray-800">{customer.mobileNumber}</td>
-                          <td className="py-3 px-4 text-sm text-gray-800 max-w-xs truncate" title={customer.address}>
+                          <td className="py-3 px-4 text-sm text-gray-800 w-1/4">{customer.name}</td>
+                          <td className="py-3 px-4 text-sm text-gray-800 w-1/4">{customer.mobileNumber}</td>
+                          <td className="py-3 px-4 text-sm text-gray-800 max-w-xs truncate w-1/4" title={customer.address}>
                             {truncateByWords(customer.address, 10)}
                           </td>
-                          <td className="py-3 px-4 text-sm">
-                            <div className="flex space-x-2">
-                              <Button
-                              variant="blueGradient"
-                                className="text-xs hover:bg-green-700"
-                                onClick={() => {
-                                  console.log('--- + Order button clicked! ---');
-                                  console.log('Navigating to new order page for customer:', customer);
-                                  navigate(`/orders/new-order?customerId=${customer.id}&shopId=${customer.shopId}`);
-                                }}
-                              >
-                                <PlusCircle className="w-4 h-4 mr-1" />
-                                Add Order
-                              </Button>
-                              <Button
-                                variant="blueGradient" size="sm"
-                                onClick={() => handleEditCustomer(customer)}
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="blueGradient" size="sm"
-                                onClick={() => handleDeleteCustomer(customer.id)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                          <td className="py-3 px-4 text-sm w-1/4">
+                            <div className="flex gap-5">
+                              <Tooltip text="Add Order">
+                                <BaggageClaim className="w-5 h-5 text-[#55AC9A] mr-1"  onClick={() => { navigate(`/orders/new-order?customerId=${customer.id}&shopId=${customer.shopId}`); }}/>
+                              </Tooltip>
+                              <Tooltip text="Edit Customer">
+                                <Edit className="w-5 h-5 text-[#55AC9A]"  onClick={() => handleEditCustomer(customer)}/>
+                              </Tooltip>
+                              <Tooltip text="Delete Customer">
+                                <Trash2 className="w-5 h-5 text-[#55AC9A]" onClick={() => handleDeleteCustomer(customer.id)}/>
+                              </Tooltip>
+                              <Tooltip text="View Profile">
+                                <Eye className="w-5 h-5 text-[#55AC9A]"  onClick={() => navigate(`/customer/profile/${customer.id}`)}/>
+                              </Tooltip>
                             </div>
                           </td>
                         </tr>
@@ -291,7 +273,14 @@ const Customer: React.FC = () => {
             <Dialog open={isAddModalOpen} onOpenChange={handleCloseCustomerModal}>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                  <DialogTitle>{customerToEdit ? 'Update Customer' : 'Add New Customer'}</DialogTitle>
+                  <div className="flex justify-between items-center">
+                    <DialogTitle>{customerToEdit ? 'Update Customer' : 'Add New Customer'}</DialogTitle>
+                    <X
+                      size={24}
+                      onClick={() => handleCloseCustomerModal()}
+                      className="text-gray-400 hover:text-gray-700 focus:outline-none cursor-pointer"
+                    />
+                  </div>
                   <DialogDescription>
                     {customerToEdit ? 'Edit customer details here.' : 'Fill in the details to add a new customer.'}
                   </DialogDescription>

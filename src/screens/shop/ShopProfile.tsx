@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Mail, Phone, MapPin, User, Mail as MailIcon, Shirt, Users, Package, Truck, Clock, Edit, Trash2, Eye, PlusCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, User, Mail as MailIcon, Shirt,X, Package, Truck, Clock, Edit, Trash2, Eye, PlusCircle, BaggageClaim } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { baseApi } from '../../api/baseApi'; // your custom fetch wrapper or API util
 import {
@@ -18,6 +18,7 @@ import NewTailorForm from './modules/NewTailorForm'; // Import the NewTailorForm
 import NewCustomerForm from '../../screens/customer/modules/NewCustomerForm'; // Import the NewCustomerForm component from the correct path
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog'; // Import Dialog components
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
+import Tooltip from '../../components/ui/tooltip';
 
 // Added this comment to try and force linter refresh
 
@@ -77,7 +78,7 @@ const ShopProfile: React.FC = () => {
     try {
       const endpoint = deleteType === 'customer' ? 'customers' : 'tailors';
       await baseApi(`/${endpoint}/${itemToDelete}`, { method: 'DELETE' });
-      console.log(`${deleteType === 'customer' ? 'Customer' : 'Tailor'} with ID ${itemToDelete} soft-deleted.`);
+     
       if (id) {
         if (deleteType === 'customer') {
           fetchCustomers(id);
@@ -154,13 +155,11 @@ const ShopProfile: React.FC = () => {
   return (
     <div className="flex bg-[#F2F7FE]">
       <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="px-6 pt-4">
-        </div>
-
+       
         <div className="flex-1 p-5 overflow-y-auto">
           <div className="mb-6">
             <Button
-              variant="blueGradient"
+              variant="mintGreen"
               onClick={() => navigate(-1)}
             >
               ← Back
@@ -172,14 +171,14 @@ const ShopProfile: React.FC = () => {
           {shopData && !showTailorForm && !showCustomerForm ? (
             <>
               {/* User Profile Card */}
-              <div className="bg-purple-700 text-white p-6 rounded-lg shadow-md mb-6 flex items-center w-full">
-                <div className="w-24 h-24 rounded-full mr-6 flex items-center justify-center bg-white text-purple-700">
+              <div className="bg-[#55AC8A] text-white p-6 rounded-lg shadow-md mb-6 flex items-center w-full">
+                <div className="w-24 h-24 rounded-full mr-6 flex items-center justify-center bg-white text-[#55AC8A]">
                   <User size={48} />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold">{shopData.name}</h2>
-                  <p className="text-purple-200">{shopData.address}</p>
-                  <div className="flex items-center mt-4 text-purple-200">
+                  <h2 className="text-2xl font-bold text-white">{shopData.name}</h2>
+                  <p className="text-white">{shopData.address}</p>
+                  <div className="flex items-center mt-4 text-white">
                     <Mail size={16} className="mr-2" />
                     <span>{shopData.email || 'N/A'}</span>
                     <Phone size={16} className="ml-6 mr-2" />
@@ -188,7 +187,7 @@ const ShopProfile: React.FC = () => {
                     <span>{shopData.location || 'N/A'}</span>
                   </div>
                 </div>
-                <Button className="text-white hover:bg-gray-100">Follow</Button>
+                {/* <Button className="text-white hover:bg-gray-100">Follow</Button> */}
               </div>
 
               {/* Metrics Section */}
@@ -265,10 +264,12 @@ const ShopProfile: React.FC = () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between px-6 py-6">
                     <CardTitle>Tailors</CardTitle>
-                    <Button onClick={() => {
-                      setSelectedTailor(null);
-                      setShowTailorForm(true);
-                    }}>
+                    <Button 
+                      variant="mintGreen"
+                      onClick={() => {
+                        setSelectedTailor(null);
+                        setShowTailorForm(true);
+                      }}>
                       Add Tailor
                     </Button>
                   </CardHeader>
@@ -279,32 +280,27 @@ const ShopProfile: React.FC = () => {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Mobile Number</TableHead>
-                            <TableHead>Actions</TableHead>
+                            <TableHead className="w-1/5  ">Name</TableHead>
+                            <TableHead className="w-1/5 ">Mobile Number</TableHead>
+                            <TableHead className="w-1/5 ">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {tailors.map((tailor) => (
                             <TableRow key={tailor.id}>
-                              <TableCell className="font-medium">{tailor.name}</TableCell>
-                              <TableCell>{tailor.mobileNumber}</TableCell>
-                              <TableCell>
-                                <div className="flex gap-2">
-                                  <Button className="text-xs" onClick={() => handleEditTailor(tailor)}>
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button className="text-xs" onClick={() => handleDeleteTailor(tailor.id)}>
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    className="text-xs"
-                                    onClick={() => {
-                                      navigate(`/tailor/profile/${tailor.id}`);
-                                    }}
-                                  >
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
+                              <TableCell className="w-1/3 font-medium ">{tailor.name}</TableCell>
+                              <TableCell className="w-1/3 ">{tailor.mobileNumber}</TableCell>
+                              <TableCell className="w-1/5 ">
+                                <div className="flex gap-5 ">
+                                  <Tooltip text="Edit Tailor">
+                                    <Edit className="w-5 h-5 text-[#55AC9A]"  onClick={() => handleEditTailor(tailor)} />
+                                  </Tooltip>
+                                  <Tooltip text="Delete Tailor">
+                                    <Trash2 className="w-5 h-5 text-[#55AC9A]" onClick={() => handleDeleteTailor(tailor.id)} />
+                                  </Tooltip>
+                                  <Tooltip text="View Tailor Profile">
+                                    <Eye className="w-5 h-5 text-[#55AC9A]" onClick={() => { navigate(`/tailor/profile/${tailor.id}`); }}/>
+                                  </Tooltip>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -337,41 +333,32 @@ const ShopProfile: React.FC = () => {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Mobile Number</TableHead>
-                            <TableHead>Address</TableHead>
-                            <TableHead>Actions</TableHead>
+                            <TableHead className="w-1/4">Name</TableHead>
+                            <TableHead className="w-1/4">Mobile Number</TableHead>
+                            <TableHead className="w-1/4">Address</TableHead>
+                            <TableHead className="w-1/4">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {customers.map((customer) => (
                             <TableRow key={customer.id}>
-                              <TableCell className="font-medium">{customer.name}</TableCell>
-                              <TableCell>{customer.mobileNumber}</TableCell>
-                              <TableCell>{customer.address || 'N/A'}</TableCell>
-                              <TableCell>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    className="text-xs bg-green-600 hover:bg-green-700" 
-                                    onClick={() => handleAddOrder(customer)}
-                                  >
-                                    <PlusCircle className="w-4 h-4 mr-1" />
-                                    Add Order
-                                  </Button>
-                                  <Button className="text-xs" onClick={() => handleEditCustomer(customer)}>
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button className="text-xs" onClick={() => handleDeleteCustomer(customer.id)}>
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    className="text-xs"
-                                    onClick={() => {
-                                      navigate(`/customer/profile/${customer.id}`);
-                                    }}
-                                  >
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
+                              <TableCell className="w-1/4 font-medium">{customer.name}</TableCell>
+                              <TableCell className="w-1/4">{customer.mobileNumber}</TableCell>
+                              <TableCell className="w-1/4">{customer.address || 'N/A'}</TableCell>
+                              <TableCell className="w-1/4">
+                                <div className="flex gap-5">
+                                  <Tooltip text="Add Order">
+                                    <BaggageClaim className="w-5 h-5 mr-1 text-[#55AC9A]"  onClick={() => handleAddOrder(customer)} />
+                                  </Tooltip>
+                                  <Tooltip text="Edit Customer">
+                                    <Edit className="w-5 h-5 text-[#55AC9A]" onClick={() => handleEditCustomer(customer)} />
+                                  </Tooltip>
+                                  <Tooltip text="Delete Customer">
+                                    <Trash2 className="w-5 h-5 text-[#55AC9A]" onClick={() => handleDeleteCustomer(customer.id)}/>
+                                  </Tooltip>
+                                  <Tooltip text="View Customer Profile">
+                                    <Eye className="w-5 h-5 text-[#55AC9A]"  onClick={() => { navigate(`/customer/profile/${customer.id}`); }} />
+                                  </Tooltip>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -391,7 +378,14 @@ const ShopProfile: React.FC = () => {
           <Dialog open={showTailorForm} onOpenChange={setShowTailorForm}>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>{selectedTailor ? 'Update Tailor' : 'Add New Tailor'}</DialogTitle>
+                <div className="flex justify-between items-center">
+                  <DialogTitle>{selectedTailor ? 'Update Tailor' : 'Add New Tailor'}</DialogTitle>
+                  <X
+                    size={24}
+                    onClick={() => setShowTailorForm(false)}
+                    className="text-gray-400 hover:text-gray-700 focus:outline-none cursor-pointer"
+                  />
+                </div>
                 <DialogDescription>
                   {selectedTailor ? 'Edit tailor details here.' : 'Fill in the details to add a new tailor.'}
                 </DialogDescription>
@@ -409,7 +403,14 @@ const ShopProfile: React.FC = () => {
           <Dialog open={showCustomerForm} onOpenChange={setShowCustomerForm}>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>{selectedCustomer ? 'Update Customer' : 'Add New Customer'}</DialogTitle>
+                <div className="flex justify-between items-center">
+                  <DialogTitle>{selectedCustomer ? 'Update Customer' : 'Add New Customer'}</DialogTitle>
+                  <X
+                    size={24}
+                    onClick={() => setShowCustomerForm(false)}
+                    className="text-gray-400 hover:text-gray-700 focus:outline-none cursor-pointer"
+                  />
+                </div>
                 <DialogDescription>
                   {selectedCustomer ? 'Edit customer details here.' : 'Fill in the details to add a new customer.'}
                 </DialogDescription>

@@ -9,6 +9,14 @@ export const measurementItemSchema = z.object({
   sleeveLength: z.number().nullable().optional(),
   inseam: z.number().nullable().optional(),
   neck: z.number().nullable().optional(),
+  armhole: z.number().nullable().optional(),
+  bicep: z.number().nullable().optional(),
+  wrist: z.number().nullable().optional(),
+  outseam: z.number().nullable().optional(),
+  thigh: z.number().nullable().optional(),
+  knee: z.number().nullable().optional(),
+  calf: z.number().nullable().optional(),
+  ankle: z.number().nullable().optional(),
 });
 
 export const clothingItemSchema = z.object({

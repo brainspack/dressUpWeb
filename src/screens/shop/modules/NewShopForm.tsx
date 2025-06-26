@@ -60,14 +60,14 @@ const NewShopForm: React.FC<NewShopFormProps> = ({ onFormSubmitSuccess, editMode
           method: 'PATCH',
           body: JSON.stringify(values),
         })
-        console.log('Shop updated successfully:', response)
+      
       } else {
         // Create new shop
         const response = await baseApi('/shops/create', {
           method: 'POST',
           body: JSON.stringify(values),
         })
-        console.log('Shop created successfully:', response)
+       
       }
       onFormSubmitSuccess?.()
       form.reset()
@@ -81,7 +81,7 @@ const NewShopForm: React.FC<NewShopFormProps> = ({ onFormSubmitSuccess, editMode
 
   return (
     <div className="max-w-md mx-auto bg-white p-6 rounded-md shadow-md">
-      <h2 className="text-2xl font-bold mb-4">{editMode ? 'Edit Shop' : 'Create New Shop'}</h2>
+      {/* <h2 className="text-2xl font-bold mb-4">{editMode ? 'Edit Shop' : 'Create New Shop'}</h2> */}
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
         <Input

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import { Eye, Edit, Trash2, ShoppingBag, UserPlus, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -27,6 +27,7 @@ import { baseApi } from '../../api/baseApi';
 import NewTailorForm from './modules/NewTailorForm'; // Import the new tailor form
 import { useOrderStore } from '../../store/useOrderStore'; // Import useOrderStore
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
+import Tooltip from '../../components/ui/tooltip';
 
 interface ShopData {
   id: string;
@@ -85,11 +86,11 @@ const Shop: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!shopToDelete) return;
-    
+
     setIsDeleting(true);
     try {
       await baseApi(`/shops/${shopToDelete}`, { method: 'DELETE' });
-      console.log(`Shop with ID ${shopToDelete} soft-deleted.`);
+   
       await fetchShops(); // Refresh the shops list after successful deletion
       await fetchOrders(); // Refresh the orders list to reflect cascading deletes
     } catch (error: any) {
@@ -181,57 +182,45 @@ const Shop: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Phone No.</TableHead>
-                    <TableHead>Address</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="w-1/5">Name</TableHead>
+                    <TableHead className="w-1/5">Phone No.</TableHead>
+                    <TableHead className="w-1/5">Address</TableHead>
+                    <TableHead className="w-1/5">Status</TableHead>
+                    <TableHead className="w-1/5">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {shops.map((shop) => (
                     <TableRow key={shop.id}>
-                      <TableCell className="font-medium">{shop.name}</TableCell>
-                      <TableCell>{shop.phone}</TableCell>
-                      <TableCell>{shop.address}</TableCell>
-                      <TableCell>{shop.isActive ? 'Active' : 'Inactive'}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            className="text-xs"
-                            onClick={() => {
-                              console.log('Add Customer to', shop.name);
+                      <TableCell className="w-1/5 font-medium">{shop.name}</TableCell>
+                      <TableCell className="w-1/5">{shop.phone}</TableCell>
+                      <TableCell className="w-1/5">{shop.address}</TableCell>
+                      <TableCell className="w-1/5">{shop.isActive ? 'Active' : 'Inactive'}</TableCell>
+                      <TableCell className="w-1/5">
+                        <div className="flex gap-5">
+                          <Tooltip text="Add Customer">
+                            <UserPlus className="w-5 h-5 text-[#55AC9A]" onClick={() => {
                               setSelectedShopId(shop.id);
                               setIsCustomerModalOpen(true);
-                            }}
-                          >
-                            Add Customer
-                          </Button>
-                          <Button
-                            className="text-xs"
-                            onClick={() => {
-                              console.log('Add Tailor to', shop.name);
+                            }}/>
+                          </Tooltip>
+                          <Tooltip text="Add Tailor">
+                            <img src="/assets/scissor-01-stroke-rounded.svg" alt="Add Tailor" className="w-5 h-5 text-[#55AC9A]" onClick={() => {
                               setSelectedShopId(shop.id);
                               setIsAddTailorModalOpen(true);
-                            }}
-                          >
-                            Add Tailor
-                          </Button>
-                          <Button
-                            className="text-xs"
-                            onClick={() => {
-                              console.log('View Profile of', shop.name);
+                            }}/>
+                          </Tooltip>
+                          <Tooltip text="View Shop Profile">
+                            <Eye className="w-5 h-5 text-[#55AC9A]" onClick={() => {
                               navigate(`/shop/shopprofile/${shop.id}`);
-                            }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button variant="blueGradient" size="sm" onClick={() => handleEditShop(shop)}>
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="blueGradient" size="sm" onClick={() => handleDeleteShop(shop.id)}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                            }}/>
+                          </Tooltip>
+                          <Tooltip text="Edit Shop">
+                            <Edit className="w-5 h-5 text-[#55AC9A]" onClick={() => handleEditShop(shop)}/>
+                          </Tooltip>
+                          <Tooltip text="Delete Shop">
+                            <Trash2 className="w-5 h-5 text-[#55AC9A]" onClick={() => handleDeleteShop(shop.id)} />
+                          </Tooltip>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -251,9 +240,17 @@ const Shop: React.FC = () => {
       <Dialog open={isAddShopModalOpen} onOpenChange={handleCloseShopModal}>
         <DialogContent className="sm:max-w-[500px] bg-white p-6 rounded-lg z-[1000]">
           <DialogHeader>
+            <div className="flex justify-between items-center">
             <DialogTitle className="text-lg font-semibold">
               {shopToEdit ? 'Edit Shop' : 'Create New Shop'}
-            </DialogTitle>
+            </DialogTitle>        
+                <X size={24} onClick={() => {
+                  setIsAddShopModalOpen(false);
+                  setSelectedShopId(null);
+                }} 
+                className="text-gray-400 hover:text-gray-700 focus:outline-none"/>
+              {/* </button> */}
+            </div>
             <DialogDescription className="text-sm text-gray-500">
               {shopToEdit ? 'Update the shop details below.' : 'Fill in the details for the new shop.'}
             </DialogDescription>
@@ -261,7 +258,7 @@ const Shop: React.FC = () => {
 
           <NewShopForm
             onFormSubmitSuccess={() => {
-              console.log('✅ Shop form submitted successfully');
+          
               handleCloseShopModal();
               fetchShops();
             }}
@@ -272,7 +269,7 @@ const Shop: React.FC = () => {
       </Dialog>
 
       {/* Add Customer Modal */}
-      <Dialog open={isCustomerModalOpen} onOpenChange={(open) => { 
+      <Dialog open={isCustomerModalOpen} onOpenChange={(open) => {
         if (!open) {
           setIsCustomerModalOpen(false);
           setSelectedShopId(null);
@@ -280,7 +277,14 @@ const Shop: React.FC = () => {
       }}>
         <DialogContent className="sm:max-w-[500px] bg-white p-6 rounded-lg z-[1000]">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">Create New Customer</DialogTitle>
+            <div className="flex justify-between items-center">
+              <DialogTitle>Create New Customer</DialogTitle>
+                <X size={24} onClick={() => {
+                  setIsCustomerModalOpen(false);
+                  setSelectedShopId(null);
+                }} 
+                className="text-gray-400 hover:text-gray-700 focus:outline-none"/>
+            </div>
             <DialogDescription className="text-sm text-gray-500">
               Enter details to add a new customer.
             </DialogDescription>
@@ -288,7 +292,7 @@ const Shop: React.FC = () => {
 
           <NewCustomerForm
             onFormSubmitSuccess={() => {
-              console.log('✅ Customer created successfully');
+             
               setIsCustomerModalOpen(false);
               setSelectedShopId(null);
             }}
@@ -302,7 +306,7 @@ const Shop: React.FC = () => {
       </Dialog>
 
       {/* Add Tailor Modal */}
-      <Dialog open={isAddTailorModalOpen} onOpenChange={(open) => { 
+      <Dialog open={isAddTailorModalOpen} onOpenChange={(open) => {
         if (!open) {
           setIsAddTailorModalOpen(false);
           setSelectedShopId(null);
@@ -310,7 +314,14 @@ const Shop: React.FC = () => {
       }}>
         <DialogContent className="sm:max-w-[500px] bg-white p-6 rounded-lg z-[1000]">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">Add New Tailor</DialogTitle>
+            <div className="flex justify-between items-center">
+              <DialogTitle>Add New Tailor</DialogTitle>
+                <X size={24}  onClick={() => {
+                  setIsAddTailorModalOpen(false);
+                  setSelectedShopId(null);
+                }}
+                className="text-gray-400 hover:text-gray-700 focus:outline-none"/>
+            </div>
             <DialogDescription className="text-sm text-gray-500">
               Enter details for the new tailor.
             </DialogDescription>
@@ -318,7 +329,7 @@ const Shop: React.FC = () => {
 
           <NewTailorForm
             onFormSubmitSuccess={() => {
-              console.log('✅ Tailor created successfully');
+             
               setIsAddTailorModalOpen(false);
               setSelectedShopId(null);
             }}

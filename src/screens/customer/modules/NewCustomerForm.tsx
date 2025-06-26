@@ -91,7 +91,7 @@ const NewCustomerForm: React.FC<NewCustomerFormProps> = ({
           method: 'PATCH',
           data: values,
         })
-        console.log('Customer updated successfully:', response)
+    
       } else {
         // Create new customer
         const response = await baseApi('/customers/create', {
@@ -101,7 +101,7 @@ const NewCustomerForm: React.FC<NewCustomerFormProps> = ({
             shopId: shopId,
           },
         })
-        console.log('Customer created successfully:', response)
+       
       }
       onFormSubmitSuccess?.();
       reset(); // reset react-hook-form fields
@@ -150,7 +150,7 @@ const NewCustomerForm: React.FC<NewCustomerFormProps> = ({
         {apiError && <p className="text-red-600 mb-2">{apiError}</p>}
 
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="blueGradient" onClick={onCancel}>Cancel</Button>
+          <Button type="button" variant="mintGreen" onClick={onCancel}>Cancel</Button>
           <Button type="submit" disabled={isLoading}>
             {isLoading ? (customerToEdit ? 'Updating...' : 'Creating...') : (customerToEdit ? 'Update Customer' : 'Create Customer')}
           </Button>

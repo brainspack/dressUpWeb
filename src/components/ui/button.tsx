@@ -20,7 +20,11 @@ const buttonVariants = cva(
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
         seagreen: "text-white shadow-xs hover:bg-green-700 bg-green-600",
- blueGradient: "bg-gradient-to-b from-blue-400 to-blue-600 text-white shadow-md hover:from-blue-500 hover:to-blue-700"
+ blueGradient: "bg-gradient-to-b from-blue-400 to-blue-600 text-white shadow-md hover:from-blue-500 hover:to-blue-700",
+ mintGreen:
+  "bg-gradient-to-b from-[#55AC8A] to-[#4da684] text-white shadow-md hover:from-[#4da684] hover:to-[#439b77] focus-visible:ring-[#55AC8A]/50",
+   whiteBackground: "bg-white text-gray-800 shadow-md hover:bg-gray-100 focus-visible:ring-gray-300"
+
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -28,9 +32,11 @@ const buttonVariants = cva(
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
         icon: "size-9",
       },
+      
+      
     },
     defaultVariants: {
-      variant: "blueGradient",
+      variant: "mintGreen",
       size: "default",
     },
   }

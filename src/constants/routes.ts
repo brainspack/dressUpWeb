@@ -10,6 +10,7 @@ import TailorProfile from '../screens/shop/modules/TailorProfile';
 import Orders from '../screens/orders/Orders';
 import UserProfile from '../screens/user/UserProfile';
 import NewOrderForm from '../screens/orders/modules/NewOrderForm';
+import TailorList from '../screens/shop/modules/TailorList';
 
 export interface RouteConfig {
   path: string;
@@ -118,6 +119,13 @@ export const ROUTES: RouteConfig[] = [
   {
     path: '/tailor/profile/:id',
     component: TailorProfile,
+    routeType: 'private',
+    allowedRoles: ['SHOP_OWNER', 'admin'],
+    useMainLayout: false,
+  },
+  {
+    path: '/tailors',
+    component: TailorList,
     routeType: 'private',
     allowedRoles: ['SHOP_OWNER', 'admin'],
     useMainLayout: false,

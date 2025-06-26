@@ -3,6 +3,7 @@ import { baseApi } from '../api/baseApi';
 
 interface Shop {
   id: string;
+  serialNumber: number;
   name: string;
   address: string;
   description?: string;
