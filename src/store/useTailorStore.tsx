@@ -45,7 +45,7 @@ export const useTailorStore = create<TailorState>((set) => ({
   fetchTailors: async (shopId) => {
     set({ loading: true, error: null });
     try {
-      const response = await baseApi(`/tailors?shopId=${shopId}`, { method: 'GET' });
+      const response = await baseApi(`/tailors/by-shop/${shopId}`, { method: 'GET' });
       set({ tailors: response as Tailor[], loading: false });
     } catch (err: any) {
       console.error('Error fetching tailors:', err);

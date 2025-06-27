@@ -27,7 +27,7 @@ export const useCustomerStore = create<CustomerState>((set) => ({
   fetchCustomers: async (shopId) => {
     set({ loading: true, error: null });
     try {
-      const response = await baseApi(`/customers/my-customers`, { method: 'GET' });
+      const response = await baseApi(`/customers/by-shop/${shopId}`, { method: 'GET' });
       set({ customers: response as Customer[], loading: false });
     } catch (err: any) {
       console.error('Error fetching customers:', err);

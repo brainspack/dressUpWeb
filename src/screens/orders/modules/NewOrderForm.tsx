@@ -123,9 +123,12 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
   const { shops, fetchShops } = useShopStore();
 
   useEffect(() => {
-    fetchCustomers('');
+    const shopId = watch('shopId');
+    if (shopId) {
+      fetchCustomers(shopId);
+    }
     fetchShops();
-  }, [fetchCustomers, fetchShops]);
+  }, [watch('shopId'), fetchCustomers, fetchShops]);
 
   // Helper to get serial numbers
   const getCustomerSerial = (customerId: string) => {
@@ -221,7 +224,9 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                       onValueChange={handleTailorSelect}
                       options={[
                         { label: 'Select a tailor', value: 'no-selection-placeholder' },
-                        ...tailors.map(tailor => ({ label: tailor.label, value: tailor.value }))
+                        ...tailors
+                          .filter(tailor => tailor.shopId === watch('shopId'))
+                          .map(tailor => ({ label: tailor.label, value: tailor.value }))
                       ]}
                       placeholder="Select a tailor"
                       className="w-full"

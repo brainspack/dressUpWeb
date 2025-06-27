@@ -163,25 +163,21 @@ export const useOrderHook = ({
 
   // Combine initial data sources
   const initialData = useMemo(() => {
-  
-
     // If we have prop initialData, use it
     if (propInitialData) {
-     
       return propInitialData;
     }
 
     // If we're in edit mode, we'll fetch from API instead of using navigation state
     if (isEditMode) {
-    
       return undefined; // We'll fetch this from API
     }
 
     // If in edit mode (order data from navigation state), use that (fallback)
     if (navigationState?.order) {
-    
-    
-   
+      return navigationState.order;
+    }
+
     return undefined;
   }, [propInitialData, navigationState, isEditMode]);
 
@@ -197,8 +193,6 @@ export const useOrderHook = ({
   } = useForm<OrderFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: useMemo(() => {
-     
-      
       if (initialData) {
         // Ensure measurements are properly structured
         const formData = {
@@ -227,14 +221,15 @@ export const useOrderHook = ({
           })) || []
         };
         
-     
         setIsFormInitialized(true);
         return formData;
       }
 
       // If in edit mode (order data from navigation state), use that
       if (navigationState?.order) {
-       
+        setIsFormInitialized(true);
+        return navigationState.order;
+      }
 
       // For new order, try to get customerId and shopId from navigationState or URL params
       const customerId = navigationState?.customerId || new URLSearchParams(location.search).get('customerId') || '';
@@ -277,7 +272,6 @@ export const useOrderHook = ({
         costs: [{ materialCost: 0, laborCost: 0, totalCost: 0 }],
       };
 
-   
       setIsFormInitialized(true);
       return formData;
     }, [initialData, navigationState, location.search, isFormInitialized]),
@@ -296,23 +290,18 @@ export const useOrderHook = ({
   // Memoize the fetchShopId function
   const fetchShopId = useCallback(async () => {
     const currentShopId = watch('shopId');
- 
     
     // Only fetch shop ID if not already set
     if (!currentShopId || currentShopId === '') {
-    
       setLoadingShopId(true);
       setShopIdError(null);
       try {
         const response = await baseApi('/shops/my-shops', { method: 'GET' });
-      
         
         if (Array.isArray(response) && response.length > 0) {
           const fetchedShopId = response[0].id;
-         
           setValue('shopId', fetchedShopId);
         } else {
-        
           setShopIdError('No shop found for current user.');
         }
       } catch (err: any) {
@@ -322,7 +311,6 @@ export const useOrderHook = ({
         setLoadingShopId(false);
       }
     } else {
-     
       setLoadingShopId(false);
     }
   }, [setValue, watch]);
@@ -336,7 +324,7 @@ export const useOrderHook = ({
     setLoadingTailors(true);
     setTailorsError(null);
     try {
-      const response = await baseApi(`/tailors?shopId=${currentShopId}`, {
+      const response = await baseApi(`/tailors/by-shop/${currentShopId}`, {
         method: 'GET'
       });
 
@@ -345,11 +333,10 @@ export const useOrderHook = ({
           label: tailor.name,
           value: tailor.id,
           mobileNumber: tailor.mobileNumber,
-          shopId: currentShopId,
+          shopId: tailor.shopId,
         }));
         setTailors(tailorOptions);
         hasFetchedTailors.current = true;
-      
       } else {
         throw new Error('Invalid response format for tailors');
       }
@@ -359,6 +346,11 @@ export const useOrderHook = ({
       setLoadingTailors(false);
     }
   }, [currentShopId]);
+
+  useEffect(() => {
+    hasFetchedTailors.current = false;
+    fetchTailors();
+  }, [currentShopId, fetchTailors]);
 
   // Now call the effect helpers after all dependencies are defined:
   useOrderInitializationEffect(isEditMode, orderId, isFormInitialized, fetchOrderData, reset, setIsFormInitialized);
@@ -394,12 +386,7 @@ export const useOrderHook = ({
   };
 
   const onSubmit = async (data: OrderFormData) => {
-  
-   
-    
     try {
-    
-
       // Validate and format dates
       const validateAndFormatDate = (dateString: string | null | undefined): string | null => {
         if (!dateString) return null;
@@ -424,7 +411,6 @@ export const useOrderHook = ({
         measurements: data.clothes
           .flatMap(cloth => {
             const measurementValues = cloth.measurements?.[0];
-         
             
             // Always create a measurement object, even if measurementValues is undefined
             const formattedMeasurement = {
@@ -446,7 +432,6 @@ export const useOrderHook = ({
               ankle: measurementValues?.ankle ?? null,
             };
 
-         
             // Always return the measurement, even if all values are null
             return [formattedMeasurement];
           }),
@@ -459,30 +444,23 @@ export const useOrderHook = ({
         deliveryDate: validateAndFormatDate(data.deliveryDate),
       };
 
-    
-
       let response;
       if (orderId) {
-     
         response = await baseApi(`/orders/${orderId}`, {
           method: 'PATCH',
           data: orderData,
         });
-       
       } else {
-       
         response = await baseApi('/orders', {
           method: 'POST',
           data: orderData,
         });
-   
       }
 
       if (!response) {
         throw new Error('No response received from server');
       }
 
-   
       onFormSubmitSuccess?.();
       navigate('/orders');
 
