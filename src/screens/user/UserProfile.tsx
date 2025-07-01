@@ -5,6 +5,8 @@ import { Input } from '../../components/ui/input';
 import { baseApi } from '../../api/baseApi';
 import useAuthStore, { User as AuthUser } from '../../store/useAuthStore';
 import { useUserStore } from '../../store/useUserStore'; // Import the new user store
+import ReusableCard from '../../components/ui/ReusableCard';
+import Loader from '../../components/ui/Loader';
 
 interface UserData {
   id: string;
@@ -59,9 +61,7 @@ const UserProfile: React.FC = () => {
           </div>
 
           {loading && (
-            <div className="text-center py-4">
-              <p>Loading user profiles...</p>
-            </div>
+            <Loader message="Loading user profiles..." />
           )}
 
           {error && (
@@ -80,16 +80,16 @@ const UserProfile: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {!loading && !error && filteredUsers.length > 0 && (
               filteredUsers.map((user) => (
-                <Card
+                <ReusableCard
                   key={user.id}
                   className="flex items-center justify-between p-4 hover:shadow-md transition-shadow bg-green-100"
                 >
                   <div className="flex items-center min-w-0 flex-1">
                     <div className="w-12 h-12 rounded-full bg-[#55AC8A] mr-4 flex-shrink-0 flex items-center justify-center text-white" >S/A</div>
                     <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-                      <CardTitle className="text-base font-semibold mb-1 truncate">
+                      <div className="text-base font-semibold mb-1 truncate">
                         {user.name || 'N/A'}
-                      </CardTitle>
+                      </div>
                       <p className="text-gray-600 text-sm mb-1">{user.mobileNumber}</p>
                       <p className="text-gray-500 text-xs truncate">
                         Role: {user.role}
@@ -99,7 +99,7 @@ const UserProfile: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                </Card>
+                </ReusableCard>
               ))
             )}
 

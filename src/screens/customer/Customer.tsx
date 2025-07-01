@@ -37,25 +37,21 @@ import { baseApi } from '../../api/baseApi';
 import NewCustomerForm from './modules/NewCustomerForm';
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
 import Tooltip from '../../components/ui/tooltip';
-
-interface CustomerData {
-  id: string;
-  name: string;
-  mobileNumber: string;
-  address: string;
-  shopId: string;
-  // Add other properties as per your backend response if needed
-}
+import ReusableCard from '../../components/ui/ReusableCard';
+import Loader from '../../components/ui/Loader';
+import ReusableTable from '../../components/ui/ReusableTable';
+import ReusableDialog from '../../components/ui/ReusableDialog';
+import { useCustomerStore, Customer as CustomerType } from '../../store/useCustomerStore';
+import { useShopStore } from '../../store/useShopStore';
 
 const Customer: React.FC = () => {
   const user: User = useAuthStore((state) => state.user);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [customerToEdit, setCustomerToEdit] = useState<CustomerData | null>(null);
+  const [customerToEdit, setCustomerToEdit] = useState<CustomerType | null>(null);
 
-  const [customers, setCustomers] = useState<CustomerData[]>([]);
-  const [loadingCustomers, setLoadingCustomers] = useState(true);
-  const [errorFetchingCustomers, setErrorFetchingCustomers] = useState<string | null>(null);
+  const { customers, loading, error, fetchAllCustomers } = useCustomerStore();
+  const { shops } = useShopStore();
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
@@ -63,43 +59,12 @@ const Customer: React.FC = () => {
 
   const navigate = useNavigate();
 
-  // Use useCallback to memoize the fetch function
-  const fetchCustomers = useCallback(async () => {
-    setLoadingCustomers(true);
-    setErrorFetchingCustomers(null);
-    try {
-   
-      const response = await baseApi('/customers/my-customers', { 
-        method: 'GET',
-        onError: (error) => {
-          console.error('❌ Error in API call:', error);
-          setErrorFetchingCustomers(error);
-        },
-        onStart: () => {
-          console.log('🚀 Starting API request...');
-        },
-        onFinish: () => {
-          console.log('✅ API request finished');
-        }
-      });
-      
-   
-      
-      if (Array.isArray(response)) {
-      
-        setCustomers(response as CustomerData[]);
-      } else {
-       
-        setErrorFetchingCustomers('Invalid response format from server');
-      }
-    } catch (error: any) {
-     
-       
-      setErrorFetchingCustomers(error.message || 'Failed to fetch customers');
-    } finally {
-      setLoadingCustomers(false);
+  // Fetch customers on component mount and when user changes
+  useEffect(() => {
+    if (user) {
+      fetchAllCustomers();
     }
-  }, [user]);
+  }, [user, fetchAllCustomers]);
 
   // Add new handler for deleting customers inside the component
   const handleDeleteCustomer = async (customerId: string) => {
@@ -114,7 +79,7 @@ const Customer: React.FC = () => {
     try {
       await baseApi(`/customers/${customerToDelete}`, { method: 'DELETE' });
    
-      fetchCustomers(); // Refresh the customer list after successful deletion
+      fetchAllCustomers(); // Refresh the customer list after successful deletion
     } catch (error: any) {
       console.error('Error soft-deleting customer:', error);
       alert(`Failed to delete customer: ${error.message || 'Unknown error'}`);
@@ -126,7 +91,7 @@ const Customer: React.FC = () => {
   };
 
   // New handler for editing customer
-  const handleEditCustomer = (customer: CustomerData) => {
+  const handleEditCustomer = (customer: CustomerType) => {
     setCustomerToEdit(customer);
     setIsAddModalOpen(true);
   };
@@ -136,18 +101,10 @@ const Customer: React.FC = () => {
     setCustomerToEdit(null);
   };
 
-  // Fetch customers on component mount and when user changes
-  useEffect(() => {
-    if (user) {
-    
-      fetchCustomers();
-    }
-  }, [user, fetchCustomers]);
-
   const handleCustomerCreated = async () => {
   
     setIsAddModalOpen(false);
-    await fetchCustomers(); // Wait for the fetch to complete
+    await fetchAllCustomers(); // Wait for the fetch to complete
   };
 
   // Helper function to truncate text by words
@@ -161,11 +118,20 @@ const Customer: React.FC = () => {
   };
 
   // Filter customers based on search query
-  const filteredCustomers = customers.filter(customer => 
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.mobileNumber.includes(searchQuery) ||
-    customer.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCustomers = user?.role?.toLowerCase() === 'shop_owner'
+    ? customers.filter(c => c.shopId === user.shopId)
+    : customers;
+
+  if (user?.role?.toLowerCase() === 'shop_owner' && shops.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-lg font-bold mb-4">Please create your shop to access customers.</p>
+          <Button variant="mintGreen" onClick={() => navigate('/shop/new')}>Create Shop</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -208,60 +174,54 @@ const Customer: React.FC = () => {
               </div>
 
               {/* Loading and Error States */}
-              {loadingCustomers && (
+              {loading && (
+                <Loader message="Loading customers..." />
+              )}
+
+              {error && (
                 <div className="text-center py-4">
-                  <p>Loading customers...</p>
+                  <p className="text-red-500">Error: {error}</p>
                 </div>
               )}
 
-              {errorFetchingCustomers && (
-                <div className="text-center py-4">
-                  <p className="text-red-500">Error: {errorFetchingCustomers}</p>
-                </div>
-              )}
-
-              {!loadingCustomers && !errorFetchingCustomers && filteredCustomers.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full bg-white rounded-lg shadow-md">
-                    <thead className="bg-blue-100">
-                      <tr>
-                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 w-1/4">Name</th>
-                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 w-1/4">Mobile Number</th>
-                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 w-1/4">Address</th>
-                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 w-1/4">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredCustomers.map((customer) => (
-                        <tr key={customer.id} className="border-b border-gray-200 hover:bg-gray-50">
-                          <td className="py-3 px-4 text-sm text-gray-800 w-1/4">{customer.name}</td>
-                          <td className="py-3 px-4 text-sm text-gray-800 w-1/4">{customer.mobileNumber}</td>
-                          <td className="py-3 px-4 text-sm text-gray-800 max-w-xs truncate w-1/4" title={customer.address}>
-                            {truncateByWords(customer.address, 10)}
-                          </td>
-                          <td className="py-3 px-4 text-sm w-1/4">
-                            <div className="flex gap-5">
-                              <Tooltip text="Add Order">
-                                <BaggageClaim className="w-5 h-5 text-[#55AC9A] mr-1"  onClick={() => { navigate(`/orders/new-order?customerId=${customer.id}&shopId=${customer.shopId}`); }}/>
-                              </Tooltip>
-                              <Tooltip text="Edit Customer">
-                                <Edit className="w-5 h-5 text-[#55AC9A]"  onClick={() => handleEditCustomer(customer)}/>
-                              </Tooltip>
-                              <Tooltip text="Delete Customer">
-                                <Trash2 className="w-5 h-5 text-[#55AC9A]" onClick={() => handleDeleteCustomer(customer.id)}/>
-                              </Tooltip>
-                              <Tooltip text="View Profile">
-                                <Eye className="w-5 h-5 text-[#55AC9A]"  onClick={() => navigate(`/customer/profile/${customer.id}`)}/>
-                              </Tooltip>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              {!loading && !error && filteredCustomers.length > 0 ? (
+                <ReusableTable
+                  columns={[
+                    { header: 'Name', accessor: 'name', className: 'w-1/4' },
+                    { header: 'Mobile Number', accessor: 'mobileNumber', className: 'w-1/4' },
+                    { header: 'Address', accessor: 'address', className: 'w-1/4' },
+                    { header: 'Actions', accessor: 'actions', className: 'w-1/4' },
+                  ]}
+                  data={filteredCustomers}
+                  renderRow={(customer: CustomerType) => (
+                    <tr key={customer.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                      <td className="p-4 align-middle w-1/4 font-medium">{customer.name}</td>
+                      <td className="p-4 align-middle w-1/4">{customer.mobileNumber}</td>
+                      <td className="p-4 align-middle w-1/4 max-w-xs truncate" title={customer.address}>
+                        {truncateByWords(customer.address, 10)}
+                      </td>
+                      <td className="p-4 align-middle w-1/4">
+                        <div className="flex gap-5">
+                          <Tooltip text="Add Order">
+                            <BaggageClaim className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => { navigate(`/orders/new-order?customerId=${customer.id}&shopId=${customer.shopId}`); }}/>
+                          </Tooltip>
+                          <Tooltip text="Edit Customer">
+                            <Edit className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => handleEditCustomer(customer)}/>
+                          </Tooltip>
+                          <Tooltip text="Delete Customer">
+                            <Trash2 className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => handleDeleteCustomer(customer.id)}/>
+                          </Tooltip>
+                          <Tooltip text="View Profile">
+                            <Eye className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => navigate(`/customer/profile/${customer.id}`)}/>
+                          </Tooltip>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  emptyMessage="No customers found."
+                />
               ) : (
-                !loadingCustomers && !errorFetchingCustomers && filteredCustomers.length === 0 && (
+                !loading && !error && filteredCustomers.length === 0 && (
                   <div className="text-center py-4">
                     <p>No customers found.</p>
                   </div>
@@ -270,29 +230,14 @@ const Customer: React.FC = () => {
             </>
 
             {/* Add New Customer Modal */}
-            <Dialog open={isAddModalOpen} onOpenChange={handleCloseCustomerModal}>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <div className="flex justify-between items-center">
-                    <DialogTitle>{customerToEdit ? 'Update Customer' : 'Add New Customer'}</DialogTitle>
-                    <X
-                      size={24}
-                      onClick={() => handleCloseCustomerModal()}
-                      className="text-gray-400 hover:text-gray-700 focus:outline-none cursor-pointer"
-                    />
-                  </div>
-                  <DialogDescription>
-                    {customerToEdit ? 'Edit customer details here.' : 'Fill in the details to add a new customer.'}
-                  </DialogDescription>
-                </DialogHeader>
-                <NewCustomerForm
-                  shopId={user?.shopId || null}
-                  customerToEdit={customerToEdit || undefined}
-                  onFormSubmitSuccess={handleCustomerCreated}
-                  onCancel={handleCloseCustomerModal}
-                />
-              </DialogContent>
-            </Dialog>
+            <ReusableDialog open={isAddModalOpen} onOpenChange={handleCloseCustomerModal} title={customerToEdit ? 'Update Customer' : 'Add New Customer'} description={customerToEdit ? 'Edit customer details here.' : 'Fill in the details to add a new customer.'}>
+              <NewCustomerForm
+                shopId={user?.shopId || null}
+                customerToEdit={customerToEdit || undefined}
+                onFormSubmitSuccess={handleCustomerCreated}
+                onCancel={handleCloseCustomerModal}
+              />
+            </ReusableDialog>
 
             {/* Delete Confirmation Modal */}
             <DeleteConfirmationModal

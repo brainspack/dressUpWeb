@@ -1,10 +1,12 @@
 import { create } from 'zustand';
 import { baseApi } from '../api/baseApi';
+import useAuthStore from './useAuthStore';
 
-interface Shop {
+export interface Shop {
   id: string;
   serialNumber: number;
   name: string;
+  phone: string;
   address: string;
   description?: string;
   ownerId: string;
@@ -37,7 +39,13 @@ export const useShopStore = create<ShopState>((set) => ({
   fetchShops: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await baseApi('/shops/my-shops', { method: 'GET' });
+      const user = useAuthStore.getState().user;
+      let response;
+      if (user?.role === 'SUPER_ADMIN') {
+        response = await baseApi('/shops', { method: 'GET' });
+      } else {
+        response = await baseApi('/shops/my-shops', { method: 'GET' });
+      }
       set({ shops: response as Shop[], loading: false });
     } catch (err: any) {
       console.error('Error fetching shops:', err);

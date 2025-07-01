@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useOrderStore, Order, ClothingItem, CostItem, MeasurementItem } from '../../store/useOrderStore';
+import { useOrderStore, Order as OrderType } from '../../store/useOrderStore';
 import { Edit, Trash2, AlertCircle } from 'lucide-react';
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import Tooltip from '../../components/ui/tooltip';
+import ReusableTable from '../../components/ui/ReusableTable';
+import useAuthStore from '../../store/useAuthStore';
+import { useShopStore } from '../../store/useShopStore';
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -18,8 +20,9 @@ const Orders = () => {
     updateOrder,
     deleteOrder,
   } = useOrderStore();
+  const user = useAuthStore((state) => state.user);
+  const { shops } = useShopStore();
 
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -28,10 +31,14 @@ const Orders = () => {
     fetchOrders();
   }, [fetchOrders]);
 
-  const handleEditOrder = (order: Order) => {
-   
-    // Simply navigate to the edit route - the useOrderHook will fetch the data from API
-    navigate(`/orders/edit/${order.id}`);
+  const handleEditOrder = (order: OrderType) => {
+    navigate(`/orders/edit/${order.id}`, {
+      state: {
+        customerId: order.customer?.id,
+        shopId: order.shopId,
+        order: order,
+      }
+    });
   };
 
   const handleDeleteOrder = (orderId: string) => {
@@ -41,17 +48,14 @@ const Orders = () => {
 
   const handleConfirmDelete = async () => {
     if (!orderToDelete) return;
-    
     setIsDeleting(true);
     try {
       await deleteOrder(orderToDelete);
       setDeleteModalOpen(false);
       setOrderToDelete(null);
-      // Optionally refresh the orders list
       await fetchOrders();
     } catch (error) {
       console.error('Error deleting order:', error);
-      // You might want to show an error message to the user here
     } finally {
       setIsDeleting(false);
     }
@@ -62,18 +66,32 @@ const Orders = () => {
   };
 
   const activeOrders = orders.filter(order => !order.deletedAt);
+  const filteredOrders = user?.role?.toLowerCase() === 'shop_owner'
+    ? activeOrders.filter(o => o.shopId === user.shopId)
+    : activeOrders;
+
+  if (user?.role?.toLowerCase() === 'shop_owner' && shops.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-lg font-bold mb-4">Please create your shop to access orders.</p>
+          <Button variant="mintGreen" onClick={() => navigate('/shop/new')}>Create Shop</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex  bg-[#F2F7FE]">
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 p-6 overflow-y-auto">
-          {activeOrders.length === 0 && !loading && !error ? (
+          {filteredOrders.length === 0 && !loading && !error ? (
             <Card className="flex-1 flex flex-col items-center justify-center p-6 text-center shadow-lg rounded-lg bg-white">
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-gray-800">No Orders Yet</CardTitle>
+                <CardTitle className="text-2xl font-bold text-gray-800">No Orders Found</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-600 mb-6">
-                <p>It looks like you haven't created any orders yet. Start by adding a new order!</p>
+                <p>No orders found for the selected shop.</p>
               </CardContent>
               <CardFooter>
                 <Button
@@ -98,42 +116,40 @@ const Orders = () => {
               {loading && <p className="text-center">Loading orders...</p>}
               {error && <p className="text-red-500 text-center">Error: {error}</p>}
 
-              {!loading && !error && activeOrders.length > 0 && (
+              {!loading && !error && filteredOrders.length > 0 && (
                 <Card>
                   <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-1/6">Customer Name</TableHead>
-                          <TableHead className="w-1/6">Tailor Name</TableHead>
-                          <TableHead className="w-1/6">Status</TableHead>
-                          <TableHead className="w-1/6">Order Date</TableHead>
-                          <TableHead className="w-1/6">Delivery Date</TableHead>
-                          <TableHead className="w-1/6">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {activeOrders.map((order, index) => (
-                          <TableRow key={order.id}>
-                            <TableCell className="w-1/6 font-medium">{order.customer.name}</TableCell>
-                            <TableCell className="w-1/6">{order.tailorName}</TableCell>
-                            <TableCell className="w-1/6">{order.status}</TableCell>
-                            <TableCell className="w-1/6">{order.orderDate ? new Date(order.orderDate).toLocaleDateString() : 'N/A'}</TableCell>
-                            <TableCell className="w-1/6">{order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : 'N/A'}</TableCell>
-                            <TableCell className="w-1/6">
+                    <ReusableTable
+                      columns={[
+                        { header: 'Customer Name', accessor: 'customerName', className: 'w-1/6' },
+                        { header: 'Tailor Name', accessor: 'tailorName', className: 'w-1/6' },
+                        { header: 'Status', accessor: 'status', className: 'w-1/6' },
+                        { header: 'Order Date', accessor: 'orderDate', className: 'w-1/6' },
+                        { header: 'Delivery Date', accessor: 'deliveryDate', className: 'w-1/6' },
+                        { header: 'Actions', accessor: 'actions', className: 'w-1/6' },
+                      ]}
+                      data={filteredOrders}
+                      renderRow={(order: OrderType) => (
+                        <tr key={order.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                          <td className="p-4 align-middle w-1/6 font-medium">{order.customer.name}</td>
+                          <td className="p-4 align-middle w-1/6">{order.tailorName}</td>
+                          <td className="p-4 align-middle w-1/6">{order.status}</td>
+                          <td className="p-4 align-middle w-1/6">{order.orderDate ? new Date(order.orderDate).toLocaleDateString() : 'N/A'}</td>
+                          <td className="p-4 align-middle w-1/6">{order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : 'N/A'}</td>
+                          <td className="p-4 align-middle w-1/6">
                               <div className="flex gap-5">
                                 <Tooltip text="Edit Order">
-                                  <Edit className="w-5 h-5 text-[#55AC9A]" onClick={() => handleEditOrder(order)}/>
+                                <Edit className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => handleEditOrder(order)}/>
                                 </Tooltip>
                                 <Tooltip text="Delete Order">
-                                  <Trash2 className="w-4 h-4 text-[#55AC9A]" onClick={() => handleDeleteOrder(order.id)}/>
+                                <Trash2 className="w-4 h-4 text-[#55AC9A] cursor-pointer" onClick={() => handleDeleteOrder(order.id)}/>
                                 </Tooltip>
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                          </td>
+                        </tr>
+                      )}
+                      emptyMessage="No orders found."
+                    />
                   </CardContent>
                 </Card>
               )}

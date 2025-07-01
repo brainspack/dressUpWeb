@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { baseApi } from '../api/baseApi';
+import useAuthStore from './useAuthStore';
+import useTailorStore from './useTailorStore';
+import useOrderStore from './useOrderStore';
 
 export interface Customer {
   id: string;
@@ -28,7 +31,12 @@ export const useCustomerStore = create<CustomerState>((set) => ({
     set({ loading: true, error: null });
     try {
       const response = await baseApi(`/customers/by-shop/${shopId}`, { method: 'GET' });
-      set({ customers: response as Customer[], loading: false });
+      const user = useAuthStore.getState().user;
+      let customers = response as Customer[];
+      if (user?.role?.toLowerCase() === 'shop_owner' && user.shopId) {
+        customers = customers.filter(customer => customer.shopId === user.shopId);
+      }
+      set({ customers, loading: false });
     } catch (err: any) {
       console.error('Error fetching customers:', err);
       set({ error: err.message || 'Failed to fetch customers', loading: false });
@@ -39,7 +47,12 @@ export const useCustomerStore = create<CustomerState>((set) => ({
     set({ loading: true, error: null });
     try {
       const response = await baseApi(`/customers`, { method: 'GET' });
-      set({ customers: response as Customer[], loading: false });
+      const user = useAuthStore.getState().user;
+      let customers = response as Customer[];
+      if (user?.role?.toLowerCase() === 'shop_owner' && user.shopId) {
+        customers = customers.filter(customer => customer.shopId === user.shopId);
+      }
+      set({ customers, loading: false });
     } catch (err: any) {
       console.error('Error fetching all customers:', err);
       set({ error: err.message || 'Failed to fetch all customers', loading: false });

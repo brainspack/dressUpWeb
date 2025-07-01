@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
-import useAuthStore, { User } from './store/useAuthStore'
+import useAuthStore from './store/useAuthStore'
 import PublicRoute from './components/wrappers/PublicRoute'
 import PrivateRoute from './components/wrappers/PrivateRoute'
 import MainLayout from './components/MainLayout';
@@ -11,13 +11,6 @@ import {
 } from './constants/routes';
 
 function App() {
-  const setUser = useAuthStore((state) => state.setUser)
-
-  // Simulated login handler
-  const handleLogin = (phone: string) => {
-    setUser({ phone, role: 'admin' })
-  }
-
   return (
     <Routes>
       {/* Public routes */}
@@ -27,7 +20,7 @@ function App() {
           path={route.path}
           element={
             <PublicRoute>
-              <route.component {...route.props} onLogin={handleLogin} />
+              <route.component {...route.props} />
             </PublicRoute>
           }
         />
@@ -36,7 +29,7 @@ function App() {
       {/* Private routes with MainLayout */}
       <Route 
         element={
-          <PrivateRoute allowedRoles={['SHOP_OWNER', 'admin']}>
+          <PrivateRoute allowedRoles={['SHOP_OWNER', 'SUPER_ADMIN', 'admin']}>
             <MainLayout>
               <Outlet />
             </MainLayout>
@@ -58,7 +51,7 @@ function App() {
           key={route.path}
           path={route.path}
           element={
-            <PrivateRoute allowedRoles={route.allowedRoles || ['SHOP_OWNER', 'admin']}>
+            <PrivateRoute allowedRoles={['SHOP_OWNER', 'SUPER_ADMIN', 'admin']}>
               <route.component {...route.props} />
             </PrivateRoute>
           }

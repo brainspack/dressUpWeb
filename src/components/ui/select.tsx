@@ -66,13 +66,13 @@ const SelectField: React.FC<SelectFieldProps> = ({
                   {option.label}
                 </div>
               ) : (
-                <Select.Item
-                  key={option.value}
-                  value={option.value}
+              <Select.Item
+                key={option.value}
+                value={option.value}
                   className="px-3 h-9 flex items-center py-0 cursor-pointer rounded hover:bg-gray-100 focus:bg-gray-200 focus:outline-none"
-                >
-                  <Select.ItemText>{option.label}</Select.ItemText>
-                </Select.Item>
+              >
+                <Select.ItemText>{option.label}</Select.ItemText>
+              </Select.Item>
               )
             )}
           </Select.Viewport>

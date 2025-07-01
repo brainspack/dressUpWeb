@@ -7,6 +7,8 @@ import { useTailorStore } from '../../../store/useTailorStore';
 import { baseApi } from '../../../api/baseApi';
 import { useShopStore } from '../../../store/useShopStore';
 import MainLayout from '../../../components/MainLayout';
+import ReusableCard from '../../../components/ui/ReusableCard';
+import Loader from '../../../components/ui/Loader';
 
 const TailorProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,9 +54,7 @@ const TailorProfile: React.FC = () => {
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex-1 p-6 overflow-y-auto flex items-center justify-center">
-          <p>Loading tailor data...</p>
-        </div>
+        <Loader message="Loading tailor data..." />
       </MainLayout>
     );
   }
@@ -86,7 +86,7 @@ const TailorProfile: React.FC = () => {
       <div className="flex-1 p-6 overflow-y-auto">
         <Button onClick={() => navigate(-1)} className="mb-6">← Back</Button>
         {/* Tailor Profile Card (match CustomerProfile) */}
-        <div className="bg-[#55AC8A] text-white p-6 rounded-lg shadow-md mb-6 flex items-center w-full">
+        <ReusableCard className="bg-[#55AC8A] text-white p-6 rounded-lg shadow-md mb-6 flex items-center w-full">
           <div className="w-24 h-24 rounded-full mr-6 flex items-center justify-center bg-white text-[#55AC8A]">
             <User size={48} />
           </div>
@@ -97,27 +97,16 @@ const TailorProfile: React.FC = () => {
               <span>{tailorData.mobileNumber || 'N/A'}</span>
             </div>
           </div>
-        </div>
-
+        </ReusableCard>
         {/* Additional Tailor Details (match CustomerProfile) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p><strong>Mobile Number:</strong> {tailorData.mobileNumber}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Other Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p><strong>Tailor:</strong> {tailorData.name} {tailorSerial && `(${tailorSerial})`}</p>
-              <p><strong>Shop:</strong> {shopName} {shopSerial && `(${shopSerial})`}</p>
-            </CardContent>
-          </Card>
+          <ReusableCard title="Contact Information">
+            <p><strong>Mobile Number:</strong> {tailorData.mobileNumber}</p>
+          </ReusableCard>
+          <ReusableCard title="Other Details">
+            <p><strong>Tailor:</strong> {tailorData.name} {tailorSerial && `(${tailorSerial})`}</p>
+            <p><strong>Shop:</strong> {shopName} {shopSerial && `(${shopSerial})`}</p>
+          </ReusableCard>
         </div>
       </div>
     </MainLayout>

@@ -11,12 +11,16 @@ import MeasurementInputs from '../components/MeasurementInputs';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card';
 import { useOrderHook } from '../hooks/useOrderHook';
 import { baseApi } from '../../../api/baseApi';
-import { User, User2 } from 'lucide-react';
+
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { sortedFemaleTypeOptions, sortedMaleTypeOptions, femaleTypeLabels, maleTypeLabels } from '../orderTypeOptions';
 
 import { useCustomerStore } from '../../../store/useCustomerStore';
 import { useShopStore } from '../../../store/useShopStore';
+import ReusableCard from '../../../components/ui/ReusableCard';
+import Loader from '../../../components/ui/Loader';
+import { X } from 'lucide-react';
+import Tooltip from '../../../components/ui/tooltip';
 
 interface NewOrderFormProps {
   onFormSubmitSuccess?: () => void;
@@ -56,13 +60,14 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
     handleCostChange,
     handleTailorSelect,
     onSubmit,
+    formError,
   } = useOrderHook({
     onFormSubmitSuccess,
     initialData: propInitialData,
     orderId: propOrderId,
     onBack,
   });
-  
+
   // Add a title based on whether we're editing or creating
   const formTitle = orderId ? "Edit Order" : "New Order";
   const submitButtonText = orderId ? "Update Order" : "Create Order";
@@ -143,11 +148,18 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
   // Show loading state when fetching order data from API
   if (isEditMode && isLoadingOrder) {
     return (
-      <div className="flex justify-center items-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Loading order data...</p>
-        </div>
+      <Loader message="Loading order data..." />
+    );
+  }
+
+  const [imageUploadErrors, setImageUploadErrors] = useState<{ [key: number]: string }>({});
+  const [videoUploadErrors, setVideoUploadErrors] = useState<{ [key: number]: string }>({});
+
+  // Show error if formError is set
+  if (formError) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-red-500 text-xl font-bold">{formError}</div>
       </div>
     );
   }
@@ -165,7 +177,7 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
           ← Back
         </Button>
       </div>
-      <Card>
+      <ReusableCard>
         <CardContent className="px-6 py-1">
           {/* Back Button */}
 
@@ -291,7 +303,7 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
 
             {/* Clothing Items */}
             {fields.map((field, index) => {
-           
+
               return (
                 <Card key={field.id} className="mb-4 p-4 border rounded-lg">
                   <CardHeader className="px-0 py-4">
@@ -301,28 +313,28 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 h-full">
                       {/* Left column for clothing details and uploaders */}
                       <div className="space-y-2 flex flex-col justify-between col-span-12 md:col-span-5">
-                        
+
                         {/* Gender selection between Type and Color */}
                         <div className="mb-2">
                           <Label className="block text-xs font-medium text-gray-700 mb-1">Gender</Label>
                           <div className="flex gap-4">
-                           
-                              <i className={`fa-solid fa-person text-[30px] p-1.5 rounded-md border-2  ${genders[index] === 'male' ? 'bg-[#a67c52] border-[#a67c52] text-white' : 'bg-[#ffffff] border-gray-300 text-[#a67c52]'} `}
+
+                            <i className={`fa-solid fa-person text-[30px] p-1.5 rounded-md border-2  ${genders[index] === 'male' ? 'bg-[#a67c52] border-[#a67c52] text-white' : 'bg-[#ffffff] border-gray-300 text-[#a67c52]'} `}
                               onClick={() => {
                                 if (genders[index] !== 'male') {
                                   setGenders(g => ({ ...g, [index]: 'male' }));
                                   setValue(`clothes.${index}.type`, '');
                                 }
                               }}></i>
-                           
-                              <i className={`fa-solid fa-person-dress text-[30px]  p-1.5 rounded-md border-2 ${genders[index] === 'female' ? 'bg-[#3a2a1a] border-[#3a2a1a] text-white' : 'bg-[#f5f5f5] border-gray-300 text-[#3a2a1a]'}`}
+
+                            <i className={`fa-solid fa-person-dress text-[30px]  p-1.5 rounded-md border-2 ${genders[index] === 'female' ? 'bg-[#3a2a1a] border-[#3a2a1a] text-white' : 'bg-[#f5f5f5] border-gray-300 text-[#3a2a1a]'}`}
                               onClick={() => {
                                 if (genders[index] !== 'female') {
                                   setGenders(g => ({ ...g, [index]: 'female' }));
                                   setValue(`clothes.${index}.type`, '');
                                 }
                               }}></i>
-                     
+
                           </div>
                         </div>
                         <SelectField
@@ -355,56 +367,132 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                           error={(errors.clothes?.[index]?.designNotes as any)?.message || errors.clothes?.[index]?.designNotes}
                         />
                         {/* Uploaders below details */}
-                        <div className="flex flex-col md:flex-row gap-4 w-full mt-4">
-                          <ImageUploader
-                            label="Upload Images"
-                            onFilesChange={(files) => {
-                              if (files) {
-                                // Convert FileList to array of URLs
-                                const urls = Array.from(files).map(file => URL.createObjectURL(file));
-                                setValue(`clothes.${index}.imageUrls`, urls, { shouldDirty: true });
-                              }
-                            }}
-                            initialUrls={watch(`clothes.${index}.imageUrls`) || []}
-                            existingImageUrls={watch(`clothes.${index}.imageUrls`) || []}
-                            multiple
-                            className="flex-1"
-                          />
-                          <ImageUploader
-                            label="Upload Videos"
-                            onFilesChange={(files) => {
-                              if (files) {
-                                // Convert FileList to array of URLs
-                                const urls = Array.from(files).map(file => URL.createObjectURL(file));
-                                setValue(`clothes.${index}.videoUrls`, urls, { shouldDirty: true });
-                              }
-                            }}
-                            initialUrls={watch(`clothes.${index}.videoUrls`) || []}
-                            existingImageUrls={watch(`clothes.${index}.videoUrls`) || []}
-                            multiple
-                            accept="video/*"
-                            className="flex-1"
-                          />
+                        {/* Previews Section */}
+                        {(watch(`clothes.${index}.imageUrls`) || []).length > 0 && (
+                          <div className="flex gap-2 mb-2 border-2 border-dashed border-gray-300 rounded-md p-2">
+                            {(watch(`clothes.${index}.imageUrls`) || []).map((url, imgIdx) => (
+                              <div key={imgIdx} className="relative w-20 h-20">
+                                <img src={url} alt={`Preview ${imgIdx + 1}`} className="w-full h-full object-cover rounded" />
+                                <X
+                                  size={16}
+                                  className="absolute top-0 right-0 bg-white bg-opacity-80 rounded-full p-1 text-red-500 hover:bg-opacity-100"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    const urls = [...(watch(`clothes.${index}.imageUrls`) || [])];
+                                    urls.splice(imgIdx, 1);
+                                    setValue(`clothes.${index}.imageUrls`, urls, { shouldDirty: true });
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {(watch(`clothes.${index}.videoUrls`) || []).length > 0 && (
+                          <div className="flex gap-2 mb-2 border-2 border-dashed border-gray-300 rounded-md p-2">
+                            {(watch(`clothes.${index}.videoUrls`) || []).map((url, vidIdx) => (
+                              <div key={vidIdx} className="relative w-20 h-20">
+                                <video src={url} controls className="w-full h-full object-cover rounded" />
+                                <X
+                                  size={16}
+                                  className="absolute top-0 right-0 bg-white bg-opacity-80 rounded-full p-1 text-red-500 hover:bg-opacity-100"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    const urls = [...(watch(`clothes.${index}.videoUrls`) || [])];
+                                    urls.splice(vidIdx, 1);
+                                    setValue(`clothes.${index}.videoUrls`, urls, { shouldDirty: true });
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Uploaders in one row */}
+                        <div className="flex gap-3 w-full">
+                          <Tooltip text="Add Image">
+                            <div className="flex gap-1 w-full">
+                              <ImageUploader
+                                label="Upload Images"
+                                onFilesChange={(files) => {
+                                  if (files) {
+                                    // Validate image formats
+                                    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                                    const invalid = Array.from(files).find(file => !allowedTypes.includes(file.type));
+                                    if (invalid) {
+                                      setImageUploadErrors(prev => ({ ...prev, [index]: 'Only .jpg, .jpeg, or .png formats are allowed.' }));
+                                      return;
+                                    } else {
+                                      setImageUploadErrors(prev => ({ ...prev, [index]: '' }));
+                                    }
+                                    const urls = Array.from(files).map(file => URL.createObjectURL(file));
+                                    const current = watch(`clothes.${index}.imageUrls`) || [];
+                                    const newUrls = [...current, ...urls].slice(0, 2);
+                                    setValue(`clothes.${index}.imageUrls`, newUrls, { shouldDirty: true });
+                                  }
+                                }}
+                                initialUrls={watch(`clothes.${index}.imageUrls`) || []}
+                                existingImageUrls={watch(`clothes.${index}.imageUrls`) || []}
+                                multiple
+                                maxFiles={2}
+                                className="w-42"
+                                accept=".jpg,.jpeg,.png"
+                              />
+                              {imageUploadErrors[index] && (
+                                <div className="text-red-500 text-xs mt-1">{imageUploadErrors[index]}</div>
+                              )}
+                            </div>
+                          </Tooltip>
+                          <Tooltip text="Add Video">
+                            <div className="flex gap-1 w-full">
+                              <ImageUploader
+                                label="Upload Videos"
+                                onFilesChange={(files) => {
+                                  if (files) {
+                                    // Validate video formats
+                                    const allowedTypes = ['video/mp4', 'video/quicktime'];
+                                    const invalid = Array.from(files).find(file => !allowedTypes.includes(file.type));
+                                    if (invalid) {
+                                      setVideoUploadErrors(prev => ({ ...prev, [index]: 'Only .mp4 or .mov formats are allowed.' }));
+                                      return;
+                                    } else {
+                                      setVideoUploadErrors(prev => ({ ...prev, [index]: '' }));
+                                    }
+                                    const urls = Array.from(files).map(file => URL.createObjectURL(file));
+                                    const current = watch(`clothes.${index}.videoUrls`) || [];
+                                    const newUrls = [...current, ...urls].slice(0, 2);
+                                    setValue(`clothes.${index}.videoUrls`, newUrls, { shouldDirty: true });
+                                  }
+                                }}
+                                initialUrls={watch(`clothes.${index}.videoUrls`) || []}
+                                existingImageUrls={watch(`clothes.${index}.videoUrls`) || []}
+                                multiple
+                                maxFiles={2}
+                                accept=".mp4,.mov"
+                                className="w-42"
+                              />
+                              {videoUploadErrors[index] && (
+                                <div className="text-red-500 text-xs mt-1">{videoUploadErrors[index]}</div>
+                              )}
+                            </div>
+                          </Tooltip>
                         </div>
+
                       </div>
                       {/* Right column for measurements (now 2 sections inside) */}
                       <div className="flex flex-col col-span-12 md:col-span-7">
-
                         <Card className="border-2 border-dashed border-gray-300 p-4 flex-1">
                           <CardHeader className="px-0 py-2">
                             <CardTitle className="text-md">Measurements for Item {index + 1} (Optional)</CardTitle>
                           </CardHeader>
                           <CardContent className="px-0">
-                            {/* MeasurementInputs now supports all new measurement fields (armhole, bicep, wrist, outseam, thigh, knee, calf, ankle) */}
                             <MeasurementInputs
                               index={index}
                               register={register}
                               watch={watch}
                               setValue={setValue}
                               errors={errors}
-                              initialMeasurements={
-                                watch(`clothes.${index}.measurements`)?.[0] || {}
-                              }
+                              initialMeasurements={watch(`clothes.${index}.measurements`)?.[0] || {}}
                             />
                           </CardContent>
                         </Card>
@@ -480,7 +568,7 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                 type="submit"
                 variant="mintGreen"
                 onClick={() => {
-                 
+
                 }}
               >
                 {submitButtonText}
@@ -488,7 +576,7 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
             </div>
           </form>
         </CardContent>
-      </Card>
+      </ReusableCard>
     </div>
   );
 };

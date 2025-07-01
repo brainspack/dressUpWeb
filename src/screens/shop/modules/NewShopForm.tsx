@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -6,6 +6,9 @@ import { Button } from '../../../components/ui/button'
 import { Input } from '../../../components/ui/input'
 import { useShopFormStore } from '../../../store/useShopFormStore'
 import { baseApi } from '../../../api/baseApi'
+import { useUserStore } from '../../../store/useUserStore'
+import { useNavigate } from 'react-router-dom'
+import { useShopStore } from '../../../store/useShopStore'
 
 const shopSchema = z.object({
   name: z.string().min(1, 'Shop name is required'),
@@ -37,6 +40,9 @@ const NewShopForm: React.FC<NewShopFormProps> = ({ onFormSubmitSuccess, editMode
     resetForm,
   } = useShopFormStore()
 
+  const { user, shops, setUser } = useUserStore()
+  const navigate = useNavigate()
+
   const form = useForm<ShopFormValues>({
     resolver: zodResolver(shopSchema),
     defaultValues: editMode && shopToEdit ? shopToEdit : formData || { name: '', phone: '', address: '' },
@@ -49,6 +55,12 @@ const NewShopForm: React.FC<NewShopFormProps> = ({ onFormSubmitSuccess, editMode
     })
     return () => subscription.unsubscribe()
   }, [form.watch, setFormData])
+
+  useEffect(() => {
+    if (user?.role?.toLowerCase() === 'shop_owner' && shops.length > 0) {
+      navigate(`/shop/shopprofile/${shops[0].id}`, { replace: true })
+    }
+  }, [user, shops, navigate])
 
   const onSubmit = async (values: ShopFormValues) => {
     setApiError('')
@@ -63,11 +75,10 @@ const NewShopForm: React.FC<NewShopFormProps> = ({ onFormSubmitSuccess, editMode
       
       } else {
         // Create new shop
-        const response = await baseApi('/shops/create', {
+        await baseApi('/shops/create', {
           method: 'POST',
           body: JSON.stringify(values),
         })
-       
       }
       onFormSubmitSuccess?.()
       form.reset()

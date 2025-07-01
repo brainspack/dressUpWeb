@@ -19,6 +19,12 @@ import NewCustomerForm from '../../screens/customer/modules/NewCustomerForm'; //
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog'; // Import Dialog components
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
 import Tooltip from '../../components/ui/tooltip';
+import ReusableCard from '../../components/ui/ReusableCard';
+import Loader from '../../components/ui/Loader';
+import ReusableTable from '../../components/ui/ReusableTable';
+import ReusableDialog from '../../components/ui/ReusableDialog';
+import useAuthStore from '../../store/useAuthStore';
+import { useShopStore } from '../../store/useShopStore';
 
 // Added this comment to try and force linter refresh
 
@@ -40,6 +46,9 @@ interface CustomerData {
 const ShopProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+  const { shops } = useShopStore();
 
   const [shopData, setShopData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -152,20 +161,34 @@ const ShopProfile: React.FC = () => {
     fetchShopData();
   }, [id, fetchTailors, fetchCustomers]);
 
+  useEffect(() => {
+    if (user?.role?.toLowerCase() === 'shop_owner' && !user?.shopId && shops.length > 0) {
+      setUser({ ...user, shopId: shops[0].id });
+    }
+  }, [user, shops, setUser]);
+
+  // Restrict shop_owner to only their own shop profile
+  if (user?.role?.toLowerCase() === 'shop_owner' && user?.shopId !== id) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-red-500 text-xl font-bold">You are not authorized to view this shop profile.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex bg-[#F2F7FE]">
       <main className="flex-1 flex flex-col overflow-hidden">
        
         <div className="flex-1 p-5 overflow-y-auto">
-          <div className="mb-6">
-            <Button
-              variant="mintGreen"
-              onClick={() => navigate(-1)}
-            >
-              ← Back
-            </Button>
-          </div>
-          {loading && <p>Loading shop data...</p>}
+          <Button
+            variant="mintGreen"
+            onClick={() => navigate(-1)}
+            className="mb-4"
+          >
+            ← Back
+          </Button>
+          {loading && <Loader message="Loading shop data..." />}
           {error && <p className="text-red-500">Error: {error}</p>}
 
           {shopData && !showTailorForm && !showCustomerForm ? (
@@ -179,71 +202,49 @@ const ShopProfile: React.FC = () => {
                   <h2 className="text-2xl font-bold text-white">{shopData.name}</h2>
                   <p className="text-white">{shopData.address}</p>
                   <div className="flex items-center mt-4 text-white">
-                    <Mail size={16} className="mr-2" />
-                    <span>{shopData.email || 'N/A'}</span>
-                    <Phone size={16} className="ml-6 mr-2" />
+                    <Phone size={16} className="mr-2" />
                     <span>{shopData.phone || 'N/A'}</span>
-                    <MapPin size={16} className="ml-6 mr-2" />
-                    <span>{shopData.location || 'N/A'}</span>
                   </div>
                 </div>
-                {/* <Button className="text-white hover:bg-gray-100">Follow</Button> */}
               </div>
 
-              {/* Metrics Section */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                {/* Total Orders Card */}
-                <Card className="flex flex-col items-center justify-center p-4 bg-white">
-                  <CardHeader className="p-0 pb-2">
-                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600">
+              {/* Metrics Section (admin only) */}
+              {(user?.role?.toLowerCase() !== 'shop_owner') && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                  {/* Total Orders Card */}
+                  <ReusableCard>
+                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mb-2">
                       <Package size={24} />
                     </div>
-                  </CardHeader>
-                  <CardContent className="p-0 text-center">
                     <div className="text-2xl font-bold">{shopData.totalOrders || 0}</div>
                     <p className="text-gray-500">Total Orders</p>
-                  </CardContent>
-                </Card>
-
-                {/* New: Total Tailors Card */}
-                <Card className="flex flex-col items-center justify-center p-4 bg-white">
-                  <CardHeader className="p-0 pb-2">
-                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600">
+                  </ReusableCard>
+                  {/* Total Tailors Card */}
+                  <ReusableCard>
+                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mb-2">
                       <Shirt size={24} />
                     </div>
-                  </CardHeader>
-                  <CardContent className="p-0 text-center">
                     <div className="text-2xl font-bold">{shopData.totalActiveTailors || 0}</div>
                     <p className="text-gray-500">Total Tailors</p>
-                  </CardContent>
-                </Card>
-
-                {/* New: Delivered Orders Card */}
-                <Card className="flex flex-col items-center justify-center p-4 bg-white">
-                  <CardHeader className="p-0 pb-2">
-                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600">
+                  </ReusableCard>
+                  {/* Delivered Orders Card */}
+                  <ReusableCard>
+                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mb-2">
                       <Truck size={24} />
                     </div>
-                  </CardHeader>
-                  <CardContent className="p-0 text-center">
                     <div className="text-2xl font-bold">{shopData.deliveredOrders || 0}</div>
                     <p className="text-gray-500">Delivered Orders</p>
-                  </CardContent>
-                </Card>
-
-                {/* New: Pending Orders Card */}
-                <Card className="flex flex-col items-center justify-center p-4 bg-white">
-                  <CardHeader className="p-0 pb-2">
-                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600">
+                  </ReusableCard>
+                  {/* Pending Orders Card */}
+                  <ReusableCard>
+                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mb-2">
                       <Clock size={24} />
                     </div>
-                  </CardHeader>
-                  <CardContent className="p-0 text-center">
                     <div className="text-2xl font-bold">{shopData.pendingOrders || 0}</div>
                     <p className="text-gray-500">Pending Orders</p>
-                  </CardContent>
-                </Card>
-              </div>
+                  </ReusableCard>
+                </div>
+              )}
 
               {/* Shop Details Section */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -274,41 +275,37 @@ const ShopProfile: React.FC = () => {
                     </Button>
                   </CardHeader>
                   <CardContent>
-                    {loadingTailors && <p>Loading tailors...</p>}
+                    {loadingTailors && <Loader message="Loading tailors..." />}
                     {errorTailors && <p className="text-red-500">Error: {errorTailors}</p>}
-                    {!loadingTailors && !errorTailors && tailors.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-1/5  ">Name</TableHead>
-                            <TableHead className="w-1/5 ">Mobile Number</TableHead>
-                            <TableHead className="w-1/5 ">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {tailors.map((tailor) => (
-                            <TableRow key={tailor.id}>
-                              <TableCell className="w-1/3 font-medium ">{tailor.name}</TableCell>
-                              <TableCell className="w-1/3 ">{tailor.mobileNumber}</TableCell>
-                              <TableCell className="w-1/5 ">
-                                <div className="flex gap-5 ">
-                                  <Tooltip text="Edit Tailor">
-                                    <Edit className="w-5 h-5 text-[#55AC9A]"  onClick={() => handleEditTailor(tailor)} />
-                                  </Tooltip>
-                                  <Tooltip text="Delete Tailor">
-                                    <Trash2 className="w-5 h-5 text-[#55AC9A]" onClick={() => handleDeleteTailor(tailor.id)} />
-                                  </Tooltip>
-                                  <Tooltip text="View Tailor Profile">
-                                    <Eye className="w-5 h-5 text-[#55AC9A]" onClick={() => { navigate(`/tailor/profile/${tailor.id}`); }}/>
-                                  </Tooltip>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      !loadingTailors && !errorTailors && <p>No tailors found for this shop.</p>
+                    {!loadingTailors && !errorTailors && (
+                      <ReusableTable
+                        columns={[
+                          { header: 'Name', accessor: 'name', className: 'w-1/3' },
+                          { header: 'Mobile Number', accessor: 'mobileNumber', className: 'w-1/3' },
+                          { header: 'Actions', accessor: 'actions', className: 'w-1/3' },
+                        ]}
+                        data={[...tailors].sort((a, b) => (b.serialNumber || 0) - (a.serialNumber || 0))}
+                        renderRow={(tailor) => (
+                          <tr key={tailor.id}>
+                            <td className="w-1/3 p-4 font-medium ">{tailor.name}</td>
+                            <td className="w-1/3  p-4">{tailor.mobileNumber}</td>
+                            <td className="w-1/3 p-4">
+                              <div className="flex gap-5 ">
+                                <Tooltip text="Edit Tailor">
+                                  <Edit className="w-5 h-5 text-[#55AC9A]"  onClick={() => handleEditTailor(tailor)} />
+                                </Tooltip>
+                                <Tooltip text="Delete Tailor">
+                                  <Trash2 className="w-5 h-5 text-[#55AC9A]" onClick={() => handleDeleteTailor(tailor.id)} />
+                                </Tooltip>
+                                <Tooltip text="View Tailor Profile">
+                                  <Eye className="w-5 h-5 text-[#55AC9A]" onClick={() => { navigate(`/tailor/profile/${tailor.id}`); }}/>
+                                </Tooltip>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        emptyMessage="No tailors found for this shop."
+                      />
                     )}
                   </CardContent>
                 </Card>
@@ -327,46 +324,42 @@ const ShopProfile: React.FC = () => {
                     </Button>
                   </CardHeader>
                   <CardContent>
-                    {loadingCustomers && <p>Loading customers...</p>}
+                    {loadingCustomers && <Loader message="Loading customers..." />}
                     {errorCustomers && <p className="text-red-500">Error: {errorCustomers}</p>}
-                    {!loadingCustomers && !errorCustomers && customers.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-1/4">Name</TableHead>
-                            <TableHead className="w-1/4">Mobile Number</TableHead>
-                            <TableHead className="w-1/4">Address</TableHead>
-                            <TableHead className="w-1/4">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {customers.map((customer) => (
-                            <TableRow key={customer.id}>
-                              <TableCell className="w-1/4 font-medium">{customer.name}</TableCell>
-                              <TableCell className="w-1/4">{customer.mobileNumber}</TableCell>
-                              <TableCell className="w-1/4">{customer.address || 'N/A'}</TableCell>
-                              <TableCell className="w-1/4">
-                                <div className="flex gap-5">
-                                  <Tooltip text="Add Order">
-                                    <BaggageClaim className="w-5 h-5 mr-1 text-[#55AC9A]"  onClick={() => handleAddOrder(customer)} />
-                                  </Tooltip>
-                                  <Tooltip text="Edit Customer">
-                                    <Edit className="w-5 h-5 text-[#55AC9A]" onClick={() => handleEditCustomer(customer)} />
-                                  </Tooltip>
-                                  <Tooltip text="Delete Customer">
-                                    <Trash2 className="w-5 h-5 text-[#55AC9A]" onClick={() => handleDeleteCustomer(customer.id)}/>
-                                  </Tooltip>
-                                  <Tooltip text="View Customer Profile">
-                                    <Eye className="w-5 h-5 text-[#55AC9A]"  onClick={() => { navigate(`/customer/profile/${customer.id}`); }} />
-                                  </Tooltip>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      !loadingCustomers && !errorCustomers && <p>No customers found for this shop.</p>
+                    {!loadingCustomers && !errorCustomers && (
+                      <ReusableTable
+                        columns={[
+                          { header: 'Name', accessor: 'name', className: 'w-1/4' },
+                          { header: 'Mobile Number', accessor: 'mobileNumber', className: 'w-1/4' },
+                          { header: 'Address', accessor: 'address', className: 'w-1/4' },
+                          { header: 'Actions', accessor: 'actions', className: 'w-1/4' },
+                        ]}
+                        data={[...customers].sort((a, b) => (b.serialNumber || 0) - (a.serialNumber || 0))}
+                        renderRow={(customer) => (
+                          <tr key={customer.id}>
+                            <td className="w-1/4 p-4 font-medium">{customer.name}</td>
+                            <td className="w-1/4 p-4">{customer.mobileNumber}</td>
+                            <td className="w-1/4 p-4">{customer.address || 'N/A'}</td>
+                            <td className="w-1/4 p-4">
+                              <div className="flex gap-5">
+                                <Tooltip text="Add Order">
+                                  <BaggageClaim className="w-5 h-5 mr-1 text-[#55AC9A]"  onClick={() => handleAddOrder(customer)} />
+                                </Tooltip>
+                                <Tooltip text="Edit Customer">
+                                  <Edit className="w-5 h-5 text-[#55AC9A]" onClick={() => handleEditCustomer(customer)} />
+                                </Tooltip>
+                                <Tooltip text="Delete Customer">
+                                  <Trash2 className="w-5 h-5 text-[#55AC9A]" onClick={() => handleDeleteCustomer(customer.id)}/>
+                                </Tooltip>
+                                <Tooltip text="View Customer Profile">
+                                  <Eye className="w-5 h-5 text-[#55AC9A]"  onClick={() => { navigate(`/customer/profile/${customer.id}`); }} />
+                                </Tooltip>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        emptyMessage="No customers found for this shop."
+                      />
                     )}
                   </CardContent>
                 </Card>
@@ -375,54 +368,34 @@ const ShopProfile: React.FC = () => {
           ) : null}
 
           {/* Tailor Form in Dialog */}
-          <Dialog open={showTailorForm} onOpenChange={setShowTailorForm}>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <div className="flex justify-between items-center">
-                  <DialogTitle>{selectedTailor ? 'Update Tailor' : 'Add New Tailor'}</DialogTitle>
-                  <X
-                    size={24}
-                    onClick={() => setShowTailorForm(false)}
-                    className="text-gray-400 hover:text-gray-700 focus:outline-none cursor-pointer"
-                  />
-                </div>
-                <DialogDescription>
-                  {selectedTailor ? 'Edit tailor details here.' : 'Fill in the details to add a new tailor.'}
-                </DialogDescription>
-              </DialogHeader>
-              <NewTailorForm
-                shopId={id || null}
-                tailorToEdit={selectedTailor}
-                onFormSubmitSuccess={handleTailorFormSubmitSuccess}
-                onCancel={() => setShowTailorForm(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          <ReusableDialog
+            open={showTailorForm}
+            onOpenChange={setShowTailorForm}
+            title={selectedTailor ? 'Update Tailor' : 'Add New Tailor'}
+            description={selectedTailor ? 'Edit tailor details here.' : 'Fill in the details to add a new tailor.'}
+          >
+            <NewTailorForm
+              shopId={id || null}
+              tailorToEdit={selectedTailor}
+              onFormSubmitSuccess={handleTailorFormSubmitSuccess}
+              onCancel={() => setShowTailorForm(false)}
+            />
+          </ReusableDialog>
 
           {/* Customer Form in Dialog */}
-          <Dialog open={showCustomerForm} onOpenChange={setShowCustomerForm}>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <div className="flex justify-between items-center">
-                  <DialogTitle>{selectedCustomer ? 'Update Customer' : 'Add New Customer'}</DialogTitle>
-                  <X
-                    size={24}
-                    onClick={() => setShowCustomerForm(false)}
-                    className="text-gray-400 hover:text-gray-700 focus:outline-none cursor-pointer"
-                  />
-                </div>
-                <DialogDescription>
-                  {selectedCustomer ? 'Edit customer details here.' : 'Fill in the details to add a new customer.'}
-                </DialogDescription>
-              </DialogHeader>
-              <NewCustomerForm
-                shopId={id || null}
-                customerToEdit={selectedCustomer || undefined}
-                onFormSubmitSuccess={handleCustomerFormSubmitSuccess}
-                onCancel={() => setShowCustomerForm(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          <ReusableDialog
+            open={showCustomerForm}
+            onOpenChange={setShowCustomerForm}
+            title={selectedCustomer ? 'Update Customer' : 'Add New Customer'}
+            description={selectedCustomer ? 'Edit customer details here.' : 'Fill in the details to add a new customer.'}
+          >
+            <NewCustomerForm
+              shopId={id || null}
+              customerToEdit={selectedCustomer || undefined}
+              onFormSubmitSuccess={handleCustomerFormSubmitSuccess}
+              onCancel={() => setShowCustomerForm(false)}
+            />
+          </ReusableDialog>
         </div>
       </main>
 

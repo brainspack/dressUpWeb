@@ -7,6 +7,7 @@ import React, { useState } from 'react'
 import { FiPhone } from 'react-icons/fi'
 import { baseApi } from '../../api/baseApi'
 import { useNavigate } from 'react-router-dom' 
+import useAuthStore from '../../store/useAuthStore'
 
 const loginSchema = z.object({
   phone: z.string()
@@ -17,11 +18,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
-interface LoginProps {
-  onLogin: (phone: string) => void
-}
-
-const Login: React.FC<LoginProps> = ({ onLogin }) => {
+const Login = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   })
@@ -35,6 +32,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [otpLoading, setOtpLoading] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [apiError, setApiError] = useState('')
+
+  const setUser = useAuthStore((state) => state.setUser)
 
   const onSubmit = async (values: LoginFormValues) => {
     setApiError('')
@@ -65,8 +64,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       })
       if (res?.accessToken) {
         localStorage.setItem('accessToken', res.accessToken)
+        setUser({
+          phone: res.user.phone,
+          role: res.user.role,
+          shopId: res.user.shopId,
+        })
         navigate('/dashboard')
-        onLogin(phone)
       } else {
         throw new Error('Access token not received')
       }

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { CloudUpload } from 'lucide-react';
+import { CloudUpload, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Input } from './input'; // Assuming Input component is available in the same directory
 
@@ -11,6 +11,7 @@ interface ImageUploaderProps extends React.InputHTMLAttributes<HTMLInputElement>
   existingImageUrls?: string[];
   className?: string;
   uploadText?: string; // New prop for customizable upload text
+  maxFiles?: number; // NEW
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({
@@ -22,32 +23,48 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   className,
   multiple,
   uploadText = "UPLOAD ...", // Default value
+  maxFiles = 2, // Default to 2
   ...props
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFiles, setSelectedFiles] = useState<string[]>(initialUrls);
 
+  // Remove image by index
+  const handleRemoveImage = (idx: number) => {
+    const newFiles = [...selectedFiles];
+    newFiles.splice(idx, 1);
+    setSelectedFiles(newFiles);
+    if (onUploadSuccess) onUploadSuccess(newFiles);
+    if (onFilesChange) {
+      // Notifies parent to update form state
+      // You may want to pass a FileList-like object or just update the URLs in parent
+      // Here, we just update URLs
+    }
+  };
+
   const handleDivClick = () => {
-    fileInputRef.current?.click();
+    if (selectedFiles.length < maxFiles) {
+      fileInputRef.current?.click();
+    }
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
 
-    if (onFilesChange) {
-      onFilesChange(files);
-    }
+    let urls = Array.from(files).map(file => URL.createObjectURL(file));
+    let newFiles = [...selectedFiles, ...urls].slice(0, maxFiles);
 
-    if (onUploadSuccess) {
-      // Convert FileList to array of URLs
-      const urls = Array.from(files).map(file => URL.createObjectURL(file));
-      setSelectedFiles(urls);
-      onUploadSuccess(urls);
+    setSelectedFiles(newFiles);
+    if (onUploadSuccess) onUploadSuccess(newFiles);
+    if (onFilesChange) onFilesChange(files);
+
+    // Reset the file input so the same file can be uploaded again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
-  // Update selectedFiles when initialUrls change
   React.useEffect(() => {
     if (initialUrls.length > 0) {
       setSelectedFiles(initialUrls);
@@ -55,25 +72,26 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   }, [initialUrls]);
 
   return (
-    <div className={cn("relative border-2 border-dashed border-gray-300 rounded-md p-4 text-center cursor-pointer hover:border-blue-500 transition-colors", className)} onClick={handleDivClick}>
+    <div
+      className={cn(
+        "relative border-2 border-dashed border-gray-300 rounded-md p-2 text-center cursor-pointer hover:border-blue-500 transition-colors w-[120px] h-[120px] flex flex-col items-center justify-center",
+        className
+      )}
+      onClick={handleDivClick}
+    >
       <Input
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
         className="hidden"
         multiple={multiple}
+        disabled={selectedFiles.length >= maxFiles}
         {...props}
       />
       <div className="flex flex-col items-center justify-center">
-        <CloudUpload className="w-10 h-10 text-gray-400 mb-2" />
-        <p className="text-gray-600 font-semibold">{uploadText}</p>
-        {(selectedFiles.length > 0 || existingImageUrls.length > 0) && (
-          <div className="mt-2 text-sm text-gray-700">
-            {[...selectedFiles, ...existingImageUrls].map((url, index) => (
-              <p key={index} className="truncate max-w-[200px]">{url}</p>
-            ))}
-          </div>
-        )}
+        <CloudUpload className="w-7 h-7 text-gray-400 mb-1" />
+        <p className="text-gray-600 font-semibold text-xs">{uploadText}</p>
+       
       </div>
     </div>
   );

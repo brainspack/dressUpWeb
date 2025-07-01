@@ -5,18 +5,22 @@ import {
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore'; // Adjust path if needed
 import { Button } from './ui/button';
+import { useShopStore } from '../store/useShopStore'; // Add this import
 
 interface SidebarProps {
   isCollapsed: boolean;
   toggleCollapse: () => void;
+  onCreateShopClick?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse, onCreateShopClick }) => {
   const { logout } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const location = useLocation();
+  const { shops } = useShopStore(); // Add this inside the component
 
-  const navItems = [
+  let navItems = [
     { icon: Home, text: 'Dashboard', link: '/dashboard' },
     { icon: Store, text: 'Shops', link: '/shop' },
     { icon: Users, text: 'Customers', link: '/customer' },
@@ -24,6 +28,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
     { icon: ShoppingBag, text: 'Orders', link: '/orders' },
     { icon: UserPen, text: 'Users Profile', link: '/userprofile' },
   ];
+
+  if (user?.role?.toLowerCase() === 'shop_owner') {
+    if (shops.length === 0) {
+      navItems = [{ icon: Store, text: 'Create Shop', link: '/shop/new' }];
+    } else {
+      const shopId = shops[0].id;
+      navItems = [
+        { icon: Store, text: 'My Shop', link: `/shop/shopprofile/${shopId}` },
+        { icon: ShoppingBag, text: 'Orders', link: '/orders' },
+        { icon: Users, text: 'Customers', link: '/customer' },
+        { icon: Scissors, text: 'Tailors', link: '/tailors' },
+      ];
+    }
+  }
 
   const handleLogout = () => {
     logout();
@@ -50,6 +68,26 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
           {navItems.map((item) => {
             const isActive = location.pathname === item.link || 
                            (item.link !== '/dashboard' && location.pathname.startsWith(item.link));
+            if (item.text === 'Create Shop' && onCreateShopClick) {
+              return (
+                <li key={item.text} className="mb-2">
+                <div
+                  className={`flex items-center p-2 rounded-md transition-colors hover:bg-green-100 ${isCollapsed ? 'justify-center' : 'justify-start'}`}
+                  title={isCollapsed ? item.text : ''}
+                  onClick={onCreateShopClick}
+                >
+                  <item.icon
+                    className={`text-[#55AC8A] ${isCollapsed ? 'mr-0' : 'mr-3'}`}
+                    size={20}
+                  />
+                  {!isCollapsed && (
+                    <span className="text-[#55AC8A] whitespace-nowrap">{item.text}</span>
+                  )}
+                </div>
+              </li>
+              
+              );
+            }
             return (
               <li key={item.text} className="mb-2">
                 <Link

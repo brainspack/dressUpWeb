@@ -28,15 +28,15 @@ import NewTailorForm from './modules/NewTailorForm'; // Import the new tailor fo
 import { useOrderStore } from '../../store/useOrderStore'; // Import useOrderStore
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
 import Tooltip from '../../components/ui/tooltip';
-
-interface ShopData {
-  id: string;
-  name: string;
-  phone: string;
-  address: string;
-  isActive: boolean;
-  createdAt?: string; // Add createdAt field to the interface
-}
+import ReusableCard from '../../components/ui/ReusableCard';
+import Loader from '../../components/ui/Loader';
+import ReusableTable from '../../components/ui/ReusableTable';
+import ReusableDialog from '../../components/ui/ReusableDialog';
+import { useShopStore } from '../../store/useShopStore';
+import type { Shop } from '../../store/useShopStore';
+import useAuthStore from '../../store/useAuthStore';
+import { useCustomerStore } from '../../store/useCustomerStore';
+import { useTailorStore } from '../../store/useTailorStore';
 
 const Shop: React.FC = () => {
   const [isAddShopModalOpen, setIsAddShopModalOpen] = useState(false);
@@ -44,40 +44,20 @@ const Shop: React.FC = () => {
   const navigate = useNavigate();
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null); // State to store selected shop ID
   const [isAddTailorModalOpen, setIsAddTailorModalOpen] = useState(false); // New modal state for Add Tailor
-  const [shopToEdit, setShopToEdit] = useState<ShopData | null>(null);
+  const [shopToEdit, setShopToEdit] = useState<Shop | null>(null);
 
-  const [shops, setShops] = useState<ShopData[]>([]);
-  const [loadingShops, setLoadingShops] = useState(true);
-  const [errorFetchingShops, setErrorFetchingShops] = useState<string | null>(null);
-
-  const { fetchOrders } = useOrderStore(); // Access fetchOrders from the order store
+  const { shops, loading, error, fetchShops } = useShopStore();
+  const { orders, fetchOrders } = useOrderStore(); // Access orders and fetchOrders from the order store
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [shopToDelete, setShopToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchShops = async () => {
-    setLoadingShops(true);
-    setErrorFetchingShops(null);
-    try {
-      const response = await baseApi('/shops/my-shops', {
-        method: 'GET',
-      });
-      // Sort shops by createdAt timestamp in descending order (newest first)
-      const sortedShops = (response as ShopData[]).sort((a, b) => {
-        // Convert createdAt strings to timestamps and compare
-        const dateA = new Date(a.createdAt || 0).getTime();
-        const dateB = new Date(b.createdAt || 0).getTime();
-        return dateB - dateA; // Descending order (newest first)
-      });
-      setShops(sortedShops);
-    } catch (error: any) {
-      console.error('Error fetching shops:', error);
-      setErrorFetchingShops(error.message || 'Failed to fetch shops');
-    } finally {
-      setLoadingShops(false);
-    }
-  };
+  const setUser = useAuthStore((state) => state.setUser);
+  const user = useAuthStore((state) => state.user);
+
+  const { customers, fetchAllCustomers } = useCustomerStore();
+  const { tailors, fetchAllTailors } = useTailorStore();
 
   const handleDeleteShop = async (shopId: string) => {
     setShopToDelete(shopId);
@@ -103,7 +83,7 @@ const Shop: React.FC = () => {
     }
   };
 
-  const handleEditShop = (shop: ShopData) => {
+  const handleEditShop = (shop: Shop) => {
     setShopToEdit(shop);
     setIsAddShopModalOpen(true);
   };
@@ -113,16 +93,58 @@ const Shop: React.FC = () => {
     setShopToEdit(null); // Reset shopToEdit when modal is closed
   };
 
+  console.log({
+    shops, customers, tailors, orders,
+    loading, error,
+    user
+  });
+
   useEffect(() => {
-    fetchShops();
-  }, []);
+    (async () => {
+      try {
+        await fetchShops();
+        await fetchAllCustomers();
+        await fetchAllTailors();
+        await fetchOrders();
+      } catch (e) {
+        console.error('Error in Shop data fetch:', e);
+      }
+    })();
+  }, [fetchShops, fetchAllCustomers, fetchAllTailors, fetchOrders]);
+
+  useEffect(() => {
+    if (
+      user?.role?.toLowerCase() === 'shop_owner' &&
+      user?.shopId &&
+      shops.length > 0
+    ) {
+      navigate(`/shop/shopprofile/${user.shopId}`, { replace: true });
+    }
+  }, [user, shops, navigate]);
+
+  const isAdmin = user?.role?.toLowerCase() === 'super_admin';
+  const totalShops = shops.length;
+  const totalActiveShops = shops.filter(s => s.ownerId).length;
+  const totalTailors = isAdmin ? tailors.length : tailors.filter(t => t.shopId === user?.shopId).length;
+  const totalCustomers = isAdmin ? customers.length : customers.filter(c => c.shopId === user?.shopId).length;
+  const totalOrders = isAdmin ? orders.length : orders.filter(o => o.shopId === user?.shopId).length;
 
   const shopMetrics = [
-    { title: 'Total Shops', value: '150', description: '20 new this month', color: 'bg-blue-500' },
-    { title: 'Active Shops', value: '120', description: '10 activated this week', color: 'bg-green-500' },
-    { title: 'Tailor', value: '20', description: '30 higher than last month.', color: 'bg-orange-500' },
-    { title: 'Customers', value: '250', description: '20 higher than last month.', color: 'bg-lime-600' },
+    { title: 'Total Shops', value: totalShops, description: `${totalShops} shops in database`, color: 'bg-blue-500' },
+    { title: 'Active Shops', value: totalActiveShops, description: `${totalActiveShops} active shops`, color: 'bg-green-500' },
+    { title: 'Tailor', value: totalTailors, description: `${totalTailors} tailors`, color: 'bg-orange-500' },
+    { title: 'Customers', value: totalCustomers, description: `${totalCustomers} customers`, color: 'bg-lime-600' },
   ];
+
+  if (loading) {
+    return <Loader message="Loading shops..." />;
+  }
+  if (error) {
+    return <div className="text-red-500 text-center py-8">{error}</div>;
+  }
+  if (!loading && !error && shops.length === 0) {
+    return <div className="text-center py-8">No shops found.</div>;
+  }
 
   return (
     <div
@@ -175,62 +197,53 @@ const Shop: React.FC = () => {
               </div>
             </div>
 
-            {loadingShops && <p>Loading shops...</p>}
-            {errorFetchingShops && <p className="text-red-500">Error: {errorFetchingShops}</p>}
-
-            {!loadingShops && !errorFetchingShops && shops.length > 0 && (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-1/5">Name</TableHead>
-                    <TableHead className="w-1/5">Phone No.</TableHead>
-                    <TableHead className="w-1/5">Address</TableHead>
-                    <TableHead className="w-1/5">Status</TableHead>
-                    <TableHead className="w-1/5">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {shops.map((shop) => (
-                    <TableRow key={shop.id}>
-                      <TableCell className="w-1/5 font-medium">{shop.name}</TableCell>
-                      <TableCell className="w-1/5">{shop.phone}</TableCell>
-                      <TableCell className="w-1/5">{shop.address}</TableCell>
-                      <TableCell className="w-1/5">{shop.isActive ? 'Active' : 'Inactive'}</TableCell>
-                      <TableCell className="w-1/5">
-                        <div className="flex gap-5">
-                          <Tooltip text="Add Customer">
-                            <UserPlus className="w-5 h-5 text-[#55AC9A]" onClick={() => {
-                              setSelectedShopId(shop.id);
-                              setIsCustomerModalOpen(true);
-                            }}/>
-                          </Tooltip>
-                          <Tooltip text="Add Tailor">
-                            <img src="/assets/scissor-01-stroke-rounded.svg" alt="Add Tailor" className="w-5 h-5 text-[#55AC9A]" onClick={() => {
-                              setSelectedShopId(shop.id);
-                              setIsAddTailorModalOpen(true);
-                            }}/>
-                          </Tooltip>
-                          <Tooltip text="View Shop Profile">
-                            <Eye className="w-5 h-5 text-[#55AC9A]" onClick={() => {
-                              navigate(`/shop/shopprofile/${shop.id}`);
-                            }}/>
-                          </Tooltip>
-                          <Tooltip text="Edit Shop">
-                            <Edit className="w-5 h-5 text-[#55AC9A]" onClick={() => handleEditShop(shop)}/>
-                          </Tooltip>
-                          <Tooltip text="Delete Shop">
-                            <Trash2 className="w-5 h-5 text-[#55AC9A]" onClick={() => handleDeleteShop(shop.id)} />
-                          </Tooltip>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-
-            {!loadingShops && !errorFetchingShops && shops.length === 0 && (
-              <p>No shops found.</p>
+            {!loading && !error && shops.length > 0 && (
+              <ReusableTable
+                columns={[
+                  { header: 'Name', accessor: 'name', className: 'w-1/5' },
+                  { header: 'Phone', accessor: 'phone', className: 'w-1/5' },
+                  { header: 'Address', accessor: 'address', className: 'w-1/5' },
+                  { header: 'Serial Number', accessor: 'serialNumber', className: 'w-1/5' },
+                  { header: 'Actions', accessor: 'actions', className: 'w-1/5' },
+                ]}
+                data={[...shops].sort((a, b) => b.serialNumber - a.serialNumber)}
+                renderRow={(shop) => (
+                  <tr key={shop.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                    <td className="p-4 align-middle w-1/5 font-medium">{shop.name}</td>
+                    <td className="p-4 align-middle w-1/5">{shop.phone || 'N/A'}</td>
+                    <td className="p-4 align-middle w-1/5">{shop.address}</td>
+                    <td className="p-4 align-middle w-1/5">Shp-{(shop.serialNumber || 0) + 999}</td>
+                    <td className="p-4 align-middle w-1/5">
+                      <div className="flex gap-5">
+                        <Tooltip text="Add Customer">
+                          <UserPlus className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => {
+                            setSelectedShopId(shop.id);
+                            setIsCustomerModalOpen(true);
+                          }}/>
+                        </Tooltip>
+                        <Tooltip text="Add Tailor">
+                          <img src="/assets/scissor-01-stroke-rounded.svg" alt="Add Tailor" className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => {
+                            setSelectedShopId(shop.id);
+                            setIsAddTailorModalOpen(true);
+                          }}/>
+                        </Tooltip>
+                        <Tooltip text="View Shop Profile">
+                          <Eye className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => {
+                            navigate(`/shop/shopprofile/${shop.id}`);
+                          }}/>
+                        </Tooltip>
+                        <Tooltip text="Edit Shop">
+                          <Edit className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => handleEditShop(shop)}/>
+                        </Tooltip>
+                        <Tooltip text="Delete Shop">
+                          <Trash2 className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => handleDeleteShop(shop.id)} />
+                        </Tooltip>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                emptyMessage="No shops found."
+              />
             )}
           </div>
         </div>
@@ -257,13 +270,26 @@ const Shop: React.FC = () => {
           </DialogHeader>
 
           <NewShopForm
-            onFormSubmitSuccess={() => {
-          
+            onFormSubmitSuccess={async () => {
               handleCloseShopModal();
-              fetchShops();
+              await fetchShops();
+              const shops = useShopStore.getState().shops;
+              if (shops.length > 0) {
+                setUser({
+                  phone: user?.phone || '',
+                  role: user?.role || '',
+                  shopId: shops[0].id,
+                });
+                navigate(`/shop/shopprofile/${shops[0].id}`);
+              }
             }}
             editMode={!!shopToEdit}
-            shopToEdit={shopToEdit || undefined}
+            shopToEdit={shopToEdit ? {
+              id: shopToEdit.id,
+              name: shopToEdit.name,
+              phone: shopToEdit.phone,
+              address: shopToEdit.address
+            } : undefined}
           />
         </DialogContent>
       </Dialog>

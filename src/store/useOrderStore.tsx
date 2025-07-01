@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { baseApi } from '../api/baseApi'; // Assuming baseApi is needed to fetch data in the store
+import useAuthStore from './useAuthStore'; // Import at the top
 
 export interface MeasurementItem {
   height?: number | null;
@@ -76,11 +77,15 @@ export const useOrderStore = create<OrderState>((set) => ({
     set({ loading: true, error: null });
     try {
       const response = await baseApi('/orders', { method: 'GET' });
-      // The backend already filters out soft-deleted orders, but we'll double-check here
-      const activeOrders = (response as Order[]).filter(order => 
-        !order.deletedAt && (!order.customer?.deletedAt)
-      );
-      set({ orders: activeOrders, loading: false });
+      const user = useAuthStore.getState().user;
+      let orders = response as Order[];
+      if (user?.role?.toLowerCase() === 'shop_owner' && user.shopId) {
+        orders = orders.filter(order => !order.deletedAt && order.shopId === user.shopId && (!order.customer?.deletedAt));
+      } else {
+        // SUPER_ADMIN: only filter out soft-deleted orders, not by customer
+        orders = orders.filter(order => !order.deletedAt);
+      }
+      set({ orders, loading: false });
     } catch (err: any) {
       console.error('Error fetching orders:', err);
       set({ error: err.message || 'Failed to fetch orders', loading: false });

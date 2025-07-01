@@ -177,7 +177,7 @@ export const useOrderHook = ({
     if (navigationState?.order) {
       return navigationState.order;
     }
-
+   
     return undefined;
   }, [propInitialData, navigationState, isEditMode]);
 
@@ -220,27 +220,35 @@ export const useOrderHook = ({
             }]
           })) || []
         };
-        
         setIsFormInitialized(true);
         return formData;
       }
-
       // If in edit mode (order data from navigation state), use that
       if (navigationState?.order) {
         setIsFormInitialized(true);
         return navigationState.order;
       }
-
       // For new order, try to get customerId and shopId from navigationState or URL params
       const customerId = navigationState?.customerId || new URLSearchParams(location.search).get('customerId') || '';
       const shopId = navigationState?.shopId || new URLSearchParams(location.search).get('shopId') || '';
-
       if (!customerId || !shopId) {
         console.error('Missing required customer or shop information');
         setFormError('Missing required customer or shop information for new order.');
-        return undefined; // Prevent form from initializing without critical data
+        setIsFormInitialized(true);
+        // Return a minimal formData to avoid crash, but let the UI show the error
+        return {
+          customerId: '',
+          shopId: '',
+          tailorName: '',
+          tailorNumber: '',
+          tailorId: '',
+          status: 'PENDING' as const,
+          orderDate: new Date().toISOString().split('T')[0],
+          deliveryDate: null,
+          clothes: [],
+          costs: [{ materialCost: 0, laborCost: 0, totalCost: 0 }],
+        };
       }
-
       // Default values for a new order
       const formData: OrderFormData = {
         customerId,
@@ -271,7 +279,6 @@ export const useOrderHook = ({
         }],
         costs: [{ materialCost: 0, laborCost: 0, totalCost: 0 }],
       };
-
       setIsFormInitialized(true);
       return formData;
     }, [initialData, navigationState, location.search, isFormInitialized]),
@@ -431,7 +438,7 @@ export const useOrderHook = ({
               calf: measurementValues?.calf ?? null,
               ankle: measurementValues?.ankle ?? null,
             };
-
+         
             // Always return the measurement, even if all values are null
             return [formattedMeasurement];
           }),
@@ -460,7 +467,7 @@ export const useOrderHook = ({
       if (!response) {
         throw new Error('No response received from server');
       }
-
+   
       onFormSubmitSuccess?.();
       navigate('/orders');
 

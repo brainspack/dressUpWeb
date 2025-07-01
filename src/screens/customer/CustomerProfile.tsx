@@ -7,6 +7,8 @@ import { useCustomerStore, Customer } from '../../store/useCustomerStore';
 import { baseApi } from '../../api/baseApi';
 import { Order } from '../../store/useOrderStore';
 import { useShopStore } from '../../store/useShopStore';
+import ReusableCard from '../../components/ui/ReusableCard';
+import Loader from '../../components/ui/Loader';
 
 const CustomerProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -87,9 +89,7 @@ const CustomerProfile: React.FC = () => {
     return (
       <div className="flex  bg-[#F2F7FE]">
         <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 p-6 overflow-y-auto flex items-center justify-center">
-            <p>Loading customer data...</p>
-          </div>
+          <Loader message="Loading customer data..." />
         </main>
       </div>
     );
@@ -128,7 +128,7 @@ const CustomerProfile: React.FC = () => {
           <Button onClick={() => navigate(-1)} className="mb-6">← Back</Button>
 
           {/* Customer Profile Card */}
-          <div className="bg-[#55AC8A] text-white p-6 rounded-lg shadow-md mb-6 flex items-center w-full">
+          <ReusableCard className="bg-[#55AC8A] text-white p-6 rounded-lg shadow-md mb-6 flex items-center w-full">
             <div className="w-24 h-24 rounded-full mr-6 flex items-center justify-center bg-white text-[#55AC8A]">
               <User size={48} />
             </div>
@@ -146,28 +146,18 @@ const CustomerProfile: React.FC = () => {
                 )}
               </div>
             </div>
-          </div>
+          </ReusableCard>
 
           {/* Additional Customer Details */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p><strong>Mobile Number:</strong> {customerData.mobileNumber}</p>
-                {customerData.address && <p><strong>Address:</strong> {customerData.address}</p>}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Other Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p><strong>Customer:</strong> {customerData.name} {customerSerial && `(${customerSerial})`}</p>
-                <p><strong>Shop:</strong> {shopName} {shopSerial && `(${shopSerial})`}</p>
-              </CardContent>
-            </Card>
+            <ReusableCard title="Contact Information">
+              <p><strong>Mobile Number:</strong> {customerData.mobileNumber}</p>
+              {customerData.address && <p><strong>Address:</strong> {customerData.address}</p>}
+            </ReusableCard>
+            <ReusableCard title="Other Details">
+              <p><strong>Customer:</strong> {customerData.name} {customerSerial && `(${customerSerial})`}</p>
+              <p><strong>Shop:</strong> {shopName} {shopSerial && `(${shopSerial})`}</p>
+            </ReusableCard>
           </div>
 
           {/* Customer Orders Section */}
