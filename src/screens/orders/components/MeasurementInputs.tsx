@@ -21,22 +21,22 @@ interface MeasurementInputsProps {
 }
 
 const measurementFields = [
-  { name: 'height', label: 'Height' },
-  { name: 'chest', label: 'Chest / Bust' },
-  { name: 'waist', label: 'Waist' },
-  { name: 'hip', label: 'Hips' },
-  { name: 'shoulder', label: 'Shoulder Width' },
-  { name: 'neck', label: 'Neck' },
-  { name: 'sleeveLength', label: 'Sleeve Length' },
-  { name: 'armhole', label: 'Armhole' },
-  { name: 'bicep', label: 'Bicep' },
-  { name: 'wrist', label: 'Wrist' },
-  { name: 'inseam', label: 'Inseam' },
-  { name: 'outseam', label: 'Outseam' },
-  { name: 'thigh', label: 'Thigh' },
-  { name: 'knee', label: 'Knee' },
-  { name: 'calf', label: 'Calf' },
-  { name: 'ankle', label: 'Ankle' },
+  { name: 'height', label: 'Height (inch)' },
+  { name: 'chest', label: 'Chest / Bust (inch)' },
+  { name: 'waist', label: 'Waist (inch)' },
+  { name: 'hip', label: 'Hips (inch)' },
+  { name: 'shoulder', label: 'Shoulder Width (inch)' },
+  { name: 'neck', label: 'Neck (inch)' },
+  { name: 'sleeveLength', label: 'Sleeve Length (inch)' },
+  { name: 'armhole', label: 'Armhole (inch)' },
+  { name: 'bicep', label: 'Bicep (inch)' },
+  { name: 'wrist', label: 'Wrist (inch)' },
+  { name: 'inseam', label: 'Inseam (inch)' },
+  { name: 'outseam', label: 'Outseam (inch)' },
+  { name: 'thigh', label: 'Thigh (inch)' },
+  { name: 'knee', label: 'Knee (inch)' },
+  { name: 'calf', label: 'Calf (inch)' },
+  { name: 'ankle', label: 'Ankle (inch)' },
 ] as const;
 
 const MeasurementInputs: React.FC<MeasurementInputsProps> = ({
@@ -114,9 +114,21 @@ const MeasurementInputs: React.FC<MeasurementInputsProps> = ({
                     setValueAs: (v) => (v === '' ? null : Number(v)),
                   })}
                   className={`w-full ${error ? 'border-red-500' : ''}`}
-                  defaultValue={
-                    (measurements?.[0]?.[field.name] ?? initialMeasurements?.[field.name] ?? 0)
+                  value={
+                    (() => {
+                      const v = measurements?.[0]?.[field.name] !== undefined && measurements?.[0]?.[field.name] !== null && measurements?.[0]?.[field.name] !== 0
+                        ? measurements?.[0]?.[field.name]
+                        : initialMeasurements?.[field.name] !== undefined && initialMeasurements?.[field.name] !== null && initialMeasurements?.[field.name] !== 0
+                          ? initialMeasurements?.[field.name]
+                          : '';
+                      return v === null || v === undefined ? '' : v;
+                    })()
                   }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setValue(fieldName, val === '' ? null : Number(val));
+                  }}
+                  placeholder="Enter value"
                 />
                 {error && (
                   <p className="text-red-500 text-xs mt-1">{error.message}</p>
@@ -145,9 +157,21 @@ const MeasurementInputs: React.FC<MeasurementInputsProps> = ({
                     setValueAs: (v) => (v === '' ? null : Number(v)),
                   })}
                   className={`w-full ${error ? 'border-red-500' : ''}`}
-                  defaultValue={
-                    (measurements?.[0]?.[field.name] ?? initialMeasurements?.[field.name] ?? 0)
+                  value={
+                    (() => {
+                      const v = measurements?.[0]?.[field.name] !== undefined && measurements?.[0]?.[field.name] !== null && measurements?.[0]?.[field.name] !== 0
+                        ? measurements?.[0]?.[field.name]
+                        : initialMeasurements?.[field.name] !== undefined && initialMeasurements?.[field.name] !== null && initialMeasurements?.[field.name] !== 0
+                          ? initialMeasurements?.[field.name]
+                          : '';
+                      return v === null || v === undefined ? '' : v;
+                    })()
                   }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setValue(fieldName, val === '' ? null : Number(val));
+                  }}
+                  placeholder="Enter value"
                 />
                 {error && (
                   <p className="text-red-500 text-xs mt-1">{error.message}</p>

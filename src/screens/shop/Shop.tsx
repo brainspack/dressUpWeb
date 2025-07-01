@@ -59,6 +59,12 @@ const Shop: React.FC = () => {
   const { customers, fetchAllCustomers } = useCustomerStore();
   const { tailors, fetchAllTailors } = useTailorStore();
 
+  // Filter shops based on search query (by name)
+  const [searchQuery, setSearchQuery] = useState('');
+  const filteredShops = shops.filter(shop =>
+    shop.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleDeleteShop = async (shopId: string) => {
     setShopToDelete(shopId);
     setDeleteModalOpen(true);
@@ -186,6 +192,8 @@ const Shop: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Search shops..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
                   className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <Button
@@ -197,7 +205,7 @@ const Shop: React.FC = () => {
               </div>
             </div>
 
-            {!loading && !error && shops.length > 0 && (
+            {!loading && !error && filteredShops.length > 0 && (
               <ReusableTable
                 columns={[
                   { header: 'Name', accessor: 'name', className: 'w-1/5' },
@@ -206,7 +214,7 @@ const Shop: React.FC = () => {
                   { header: 'Serial Number', accessor: 'serialNumber', className: 'w-1/5' },
                   { header: 'Actions', accessor: 'actions', className: 'w-1/5' },
                 ]}
-                data={[...shops].sort((a, b) => b.serialNumber - a.serialNumber)}
+                data={[...filteredShops].sort((a, b) => b.serialNumber - a.serialNumber)}
                 renderRow={(shop) => (
                   <tr key={shop.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                     <td className="p-4 align-middle w-1/5 font-medium">{shop.name}</td>

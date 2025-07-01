@@ -117,10 +117,11 @@ const Customer: React.FC = () => {
     return text;
   };
 
-  // Filter customers based on search query
-  const filteredCustomers = user?.role?.toLowerCase() === 'shop_owner'
+  // Filter customers based on search query (by name)
+  const filteredCustomers = (user?.role?.toLowerCase() === 'shop_owner'
     ? customers.filter(c => c.shopId === user.shopId)
-    : customers;
+    : customers
+  ).filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   if (user?.role?.toLowerCase() === 'shop_owner' && shops.length === 0) {
     return (
@@ -159,7 +160,7 @@ const Customer: React.FC = () => {
               >
                 <Input
                   type="text"
-                  placeholder="Search Contact"
+                  placeholder="Search Customer "
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-grow max-w-xs px-3 py-2 rounded-l-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 bg-white"

@@ -36,7 +36,11 @@ const SelectField: React.FC<SelectFieldProps> = ({
           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#55AC8A]/50
           ${className}`}
       >
-        <Select.Value placeholder={placeholder} />
+        <span className="truncate max-w-[100px] overflow-hidden whitespace-nowrap text-ellipsis block" title={
+          options.find(opt => opt.value === value)?.label || value || ''
+        }>
+          <Select.Value placeholder={placeholder} />
+        </span>
         <Select.Icon className="text-white">
           <ChevronDownIcon />
         </Select.Icon>
@@ -44,6 +48,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
 
       <Select.Portal>
         <Select.Content
+          position="popper"
           className="z-50 bg-white rounded-md shadow-md border border-gray-300 text-black"
           side="bottom"
           align="start"
