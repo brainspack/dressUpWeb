@@ -5,7 +5,7 @@ import { ShoppingBag,  Package as PackageIcon,  Users, Star, Store, Scissors } f
 import { Link } from 'react-router-dom'
 
 // Import reusable UI components
-import ReusableCard from "../components/ui/ReusableCard";
+import ReusableCard from "../components/ui/CustomCard";
 import Loader from "../components/ui/Loader";
 import { useShopStore } from '../store/useShopStore';
 import { useTailorStore } from '../store/useTailorStore';
@@ -100,11 +100,6 @@ const Dashboard: React.FC = () => {
   // Show loader if any data is loading
   const isLoading = !shops.length && !tailors.length && !customers.length && !orders.length;
 
-  console.log('filteredTailors:', filteredTailors);
-  console.log('filteredCustomers:', filteredCustomers);
-  console.log('filteredOrders:', filteredOrders);
-  console.log('user:', user);
-
   return (
     <div
       className="flex flex-1"
@@ -118,8 +113,20 @@ const Dashboard: React.FC = () => {
     >
       {/* Main content flex-grow with own scroll */}
       <main className="flex-1 flex flex-col overflow-hidden bg-white">
+        {/* Role label and access message */}
+        <div className="p-2">
+          <span className="inline-block px-2 py-1 rounded-full bg-gray-200 text-gray-700 font-semibold text-xs mb-2">
+            Role: {user?.role?.toUpperCase()}
+          </span>
+          {/* {user?.role?.toUpperCase() === 'SUPER_ADMIN' && (
+            <div className="text-green-700 font-bold mb-2">You have full access to all shops, tailors, customers, and orders.</div>
+          )}
+          {user?.role?.toUpperCase() === 'SHOP_OWNER' && (
+            <div className="text-blue-700 font-semibold mb-2">You can only view and manage your own shop, tailors, customers, and orders.</div>
+          )} */}
+        </div>
         {/* Scrollable content area */}
-        <div className="flex-1 overflow-y-auto p-6 bg-white">
+        <div className="flex-1 overflow-y-auto p-3 bg-white">
           <div className="w-full  px-4">
             {isLoading ? (
               <Loader message="Loading dashboard..." />

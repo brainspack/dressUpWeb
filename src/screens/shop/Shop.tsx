@@ -28,10 +28,10 @@ import NewTailorForm from './modules/NewTailorForm'; // Import the new tailor fo
 import { useOrderStore } from '../../store/useOrderStore'; // Import useOrderStore
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
 import Tooltip from '../../components/ui/tooltip';
-import ReusableCard from '../../components/ui/ReusableCard';
+import ReusableCard from '../../components/ui/CustomCard';
 import Loader from '../../components/ui/Loader';
-import ReusableTable from '../../components/ui/ReusableTable';
-import ReusableDialog from '../../components/ui/ReusableDialog';
+import ReusableTable from '../../components/ui/CustomTable';
+import ReusableDialog from '../../components/ui/CustomDialog';
 import { useShopStore } from '../../store/useShopStore';
 import type { Shop } from '../../store/useShopStore';
 import useAuthStore from '../../store/useAuthStore';

@@ -30,7 +30,13 @@ interface AuthState {
 const useAuthStore = create<AuthState>((set) => ({
   user: (() => {
     const storedUser = localStorage.getItem('user')
-    return storedUser ? JSON.parse(storedUser) : null
+    if (!storedUser) return null;
+    const parsed = JSON.parse(storedUser);
+    // If role is an object, use its name
+    if (parsed && typeof parsed.role === 'object' && parsed.role.name) {
+      parsed.role = parsed.role.name;
+    }
+    return parsed;
   })(),
   setUser: (user: User) => {
     if (user) {

@@ -17,7 +17,7 @@ import { sortedFemaleTypeOptions, sortedMaleTypeOptions, femaleTypeLabels, maleT
 
 import { useCustomerStore } from '../../../store/useCustomerStore';
 import { useShopStore } from '../../../store/useShopStore';
-import ReusableCard from '../../../components/ui/ReusableCard';
+import ReusableCard from '../../../components/ui/CustomCard';
 import Loader from '../../../components/ui/Loader';
 import { X } from 'lucide-react';
 import Tooltip from '../../../components/ui/tooltip';
@@ -163,6 +163,9 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
       </div>
     );
   }
+
+  console.log('orderDate in form:', watch('orderDate'));
+  console.log('deliveryDate in form:', watch('deliveryDate'));
 
   return (
     <div className="w-full max-w-[1024px]  px-4 ml-0">
@@ -568,7 +571,8 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                 type="submit"
                 variant="mintGreen"
                 onClick={() => {
-
+                  setValue('orderDate', orderData.orderDate);
+                  setValue('deliveryDate', orderData.deliveryDate);
                 }}
               >
                 {submitButtonText}

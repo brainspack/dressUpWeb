@@ -5,7 +5,7 @@ import { useShopStore } from '../../../store/useShopStore';
 import MainLayout from '../../../components/MainLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
-import ReusableTable from '../../../components/ui/ReusableTable';
+import ReusableTable from '../../../components/ui/CustomTable';
 import Loader from '../../../components/ui/Loader';
 import useAuthStore from '../../../store/useAuthStore';
 

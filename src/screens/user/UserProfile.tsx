@@ -5,7 +5,7 @@ import { Input } from '../../components/ui/input';
 import { baseApi } from '../../api/baseApi';
 import useAuthStore, { User as AuthUser } from '../../store/useAuthStore';
 import { useUserStore } from '../../store/useUserStore'; // Import the new user store
-import ReusableCard from '../../components/ui/ReusableCard';
+import ReusableCard from '../../components/ui/CustomCard';
 import Loader from '../../components/ui/Loader';
 
 interface UserData {

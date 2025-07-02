@@ -19,10 +19,10 @@ import NewCustomerForm from '../../screens/customer/modules/NewCustomerForm'; //
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog'; // Import Dialog components
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
 import Tooltip from '../../components/ui/tooltip';
-import ReusableCard from '../../components/ui/ReusableCard';
+import ReusableCard from '../../components/ui/CustomCard';
 import Loader from '../../components/ui/Loader';
-import ReusableTable from '../../components/ui/ReusableTable';
-import ReusableDialog from '../../components/ui/ReusableDialog';
+import ReusableTable from '../../components/ui/CustomTable';
+import ReusableDialog from '../../components/ui/CustomDialog';
 import useAuthStore from '../../store/useAuthStore';
 import { useShopStore } from '../../store/useShopStore';
 
@@ -374,6 +374,10 @@ const ShopProfile: React.FC = () => {
             title={selectedTailor ? 'Update Tailor' : 'Add New Tailor'}
             description={selectedTailor ? 'Edit tailor details here.' : 'Fill in the details to add a new tailor.'}
           >
+            {/* Cross icon for closing the modal */}
+            <div className="absolute top-4 right-4 z-10">
+              <X size={24} className="text-gray-400 hover:text-gray-700 cursor-pointer" onClick={() => setShowTailorForm(false)} />
+            </div>
             <NewTailorForm
               shopId={id || null}
               tailorToEdit={selectedTailor}
@@ -389,6 +393,10 @@ const ShopProfile: React.FC = () => {
             title={selectedCustomer ? 'Update Customer' : 'Add New Customer'}
             description={selectedCustomer ? 'Edit customer details here.' : 'Fill in the details to add a new customer.'}
           >
+            {/* Cross icon for closing the modal */}
+            <div className="absolute top-4 right-4 z-10">
+              <X size={24} className="text-gray-400 hover:text-gray-700 cursor-pointer" onClick={() => setShowCustomerForm(false)} />
+            </div>
             <NewCustomerForm
               shopId={id || null}
               customerToEdit={selectedCustomer || undefined}

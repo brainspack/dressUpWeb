@@ -39,7 +39,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
         <span className="truncate max-w-[100px] overflow-hidden whitespace-nowrap text-ellipsis block" title={
           options.find(opt => opt.value === value)?.label || value || ''
         }>
-          <Select.Value placeholder={placeholder} />
+        <Select.Value placeholder={placeholder} />
         </span>
         <Select.Icon className="text-white">
           <ChevronDownIcon />

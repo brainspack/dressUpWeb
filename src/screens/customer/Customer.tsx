@@ -37,10 +37,10 @@ import { baseApi } from '../../api/baseApi';
 import NewCustomerForm from './modules/NewCustomerForm';
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
 import Tooltip from '../../components/ui/tooltip';
-import ReusableCard from '../../components/ui/ReusableCard';
+import ReusableCard from '../../components/ui/CustomCard';
 import Loader from '../../components/ui/Loader';
-import ReusableTable from '../../components/ui/ReusableTable';
-import ReusableDialog from '../../components/ui/ReusableDialog';
+import ReusableTable from '../../components/ui/CustomTable';
+import ReusableDialog from '../../components/ui/CustomDialog';
 import { useCustomerStore, Customer as CustomerType } from '../../store/useCustomerStore';
 import { useShopStore } from '../../store/useShopStore';
 
@@ -232,6 +232,10 @@ const Customer: React.FC = () => {
 
             {/* Add New Customer Modal */}
             <ReusableDialog open={isAddModalOpen} onOpenChange={handleCloseCustomerModal} title={customerToEdit ? 'Update Customer' : 'Add New Customer'} description={customerToEdit ? 'Edit customer details here.' : 'Fill in the details to add a new customer.'}>
+              {/* Cross icon for closing the modal */}
+              <div className="absolute top-4 right-4 z-10">
+                <X size={24} className="text-gray-400 hover:text-gray-700 cursor-pointer" onClick={handleCloseCustomerModal} />
+              </div>
               <NewCustomerForm
                 shopId={user?.shopId || null}
                 customerToEdit={customerToEdit || undefined}

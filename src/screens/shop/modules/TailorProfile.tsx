@@ -7,7 +7,7 @@ import { useTailorStore } from '../../../store/useTailorStore';
 import { baseApi } from '../../../api/baseApi';
 import { useShopStore } from '../../../store/useShopStore';
 import MainLayout from '../../../components/MainLayout';
-import ReusableCard from '../../../components/ui/ReusableCard';
+import ReusableCard from '../../../components/ui/CustomCard';
 import Loader from '../../../components/ui/Loader';
 
 const TailorProfile: React.FC = () => {

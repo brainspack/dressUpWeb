@@ -6,7 +6,7 @@ import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationM
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
 import Tooltip from '../../components/ui/tooltip';
-import ReusableTable from '../../components/ui/ReusableTable';
+import ReusableTable from '../../components/ui/CustomTable';
 import useAuthStore from '../../store/useAuthStore';
 import { useShopStore } from '../../store/useShopStore';
 

@@ -7,7 +7,7 @@ import { useCustomerStore, Customer } from '../../store/useCustomerStore';
 import { baseApi } from '../../api/baseApi';
 import { Order } from '../../store/useOrderStore';
 import { useShopStore } from '../../store/useShopStore';
-import ReusableCard from '../../components/ui/ReusableCard';
+import ReusableCard from '../../components/ui/CustomCard';
 import Loader from '../../components/ui/Loader';
 
 const CustomerProfile: React.FC = () => {

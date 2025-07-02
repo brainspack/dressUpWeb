@@ -75,6 +75,7 @@ export const useOrderHook = ({
     setFormError(null);
     try {
       const response = await baseApi(`/orders/${id}`, { method: 'GET' });
+      console.log('Order API response:', response);
     
       
       if (!response) {
@@ -82,6 +83,12 @@ export const useOrderHook = ({
       }
 
       // Transform the API response to match our form structure
+      const toDateInputValue = (dateString: string | null | undefined) => {
+        if (!dateString) return '';
+        const d = new Date(dateString);
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      };
       const orderData: OrderFormData = {
         customerId: response.customerId,
         shopId: response.shopId,
@@ -89,8 +96,8 @@ export const useOrderHook = ({
         tailorNumber: response.tailorNumber || '',
         tailorId: response.tailorId || '',
         status: response.status,
-        orderDate: response.orderDate ? new Date(response.orderDate).toISOString().split('T')[0] : new Date(response.createdAt).toISOString().split('T')[0],
-        deliveryDate: response.deliveryDate ? new Date(response.deliveryDate).toISOString().split('T')[0] : null,
+        orderDate: toDateInputValue(response.orderDate) || toDateInputValue(response.createdAt),
+        deliveryDate: toDateInputValue(response.deliveryDate) || '',
         clothes: (response.clothes || []).map((item: any) => {
           // Use measurements that are nested within this clothing item
           const itemMeasurements = item.measurements || [];

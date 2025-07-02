@@ -66,10 +66,16 @@ const Login = () => {
         localStorage.setItem('accessToken', res.accessToken)
         setUser({
           phone: res.user.phone,
-          role: res.user.role,
+          role: res.user.role?.name || res.user.role,
           shopId: res.user.shopId,
         })
-        navigate('/dashboard')
+        localStorage.setItem('user', JSON.stringify({
+          phone: res.user.phone,
+          role: res.user.role?.name || res.user.role,
+          shopId: res.user.shopId,
+        }))
+        const userRole = res.user.role?.name || res.user.role
+        navigate('/dashboard')                                                                                                                                                                                                                                                                                                                                                                  
       } else {
         throw new Error('Access token not received')
       }
