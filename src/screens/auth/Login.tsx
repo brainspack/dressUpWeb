@@ -62,8 +62,10 @@ const Login = () => {
         method: 'POST',
         data: { mobileNumber: phone, otp },
       })
-      if (res?.accessToken) {
+      if (res?.accessToken && res?.refreshToken) {
         localStorage.setItem('accessToken', res.accessToken)
+        localStorage.setItem('refreshToken', res.refreshToken)
+       
         setUser({
           phone: res.user.phone,
           role: res.user.role?.name || res.user.role,
@@ -74,10 +76,9 @@ const Login = () => {
           role: res.user.role?.name || res.user.role,
           shopId: res.user.shopId,
         }))
-        const userRole = res.user.role?.name || res.user.role
         navigate('/dashboard')                                                                                                                                                                                                                                                                                                                                                                  
       } else {
-        throw new Error('Access token not received')
+        throw new Error('Tokens not received')
       }
     } catch (err: any) {
       setOtpError(err.message || 'OTP verification failed')

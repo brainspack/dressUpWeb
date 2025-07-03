@@ -10,6 +10,8 @@ export interface BaseApiOptions {
 
 const BASE_URL = import.meta.env.VITE_BASE_API_URL;
 
+let refreshPromise: Promise<void> | null = null;
+
 export const baseApi = async (
   endpoint: string,
   {
@@ -22,7 +24,9 @@ export const baseApi = async (
     ...options
   }: BaseApiOptions = {}
 ): Promise<any> => {
-  const token = localStorage.getItem('accessToken');
+
+  let token = localStorage.getItem('accessToken');
+  const refreshToken = localStorage.getItem('refreshToken');
 
   const authHeaders = {
     'Content-Type': 'application/json',
@@ -43,11 +47,52 @@ export const baseApi = async (
   try {
     onStart?.();
 
-    const response = await fetch(BASE_URL + endpoint, config);
+    let response = await fetch(BASE_URL + endpoint, config);
+
+    if (response.status === 401 && endpoint !== '/auth/refresh-token') {
+      if (!refreshPromise) {
+        refreshPromise = (async () => {
+          let currentRefreshToken = localStorage.getItem('refreshToken');
+         
+          const refreshRes = await fetch(BASE_URL + '/auth/refresh-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: currentRefreshToken }),
+          });
+          if (refreshRes.ok) {
+            const refreshData = await refreshRes.json();
+            localStorage.setItem('accessToken', refreshData.accessToken);
+            localStorage.setItem('refreshToken', refreshData.refreshToken);
+           
+          } else {
+           
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+            throw new Error('Session expired. Please login again.');
+          }
+        })().finally(() => {
+          refreshPromise = null;
+        });
+      }
+      await refreshPromise;
+      // After refresh, retry the original request with the new token
+      const newToken = localStorage.getItem('accessToken');
+      config.headers = {
+        ...authHeaders,
+        Authorization: `Bearer ${newToken}`,
+      };
+      response = await fetch(BASE_URL + endpoint, config);
+    }
+
+   
 
     const contentType = response.headers.get('Content-Type');
     const isJson = contentType?.includes('application/json');
     const responseData = isJson ? await response.json() : await response.text();
+
+   
 
     if (!response.ok) {
       const errorMessage =
