@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FiPhone } from 'react-icons/fi'
 import { baseApi } from '../../api/baseApi'
 import { useNavigate } from 'react-router-dom' 
@@ -34,6 +34,18 @@ const Login = () => {
   const [apiError, setApiError] = useState('')
 
   const setUser = useAuthStore((state) => state.setUser)
+
+  useEffect(() => {
+    // Reset all state on mount (after logout or navigation to login)
+    setPhone('');
+    setOtpSent(false);
+    setOtp('');
+    setOtpError('');
+    setOtpLoading(false);
+    setIsLoading(false);
+    setApiError('');
+    reset();
+  }, []);
 
   const onSubmit = async (values: LoginFormValues) => {
     setApiError('')
