@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrderStore, Order as OrderType } from '../../store/useOrderStore';
-import { Edit, Trash2, AlertCircle } from 'lucide-react';
+import { Edit, Trash2, AlertCircle, Eye } from 'lucide-react';
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
@@ -39,6 +39,10 @@ const Orders = () => {
         order: order,
       }
     });
+  };
+
+  const handleViewOrder = (order: OrderType) => {
+    navigate(`/orders/view/${order.id}`);
   };
 
   const handleDeleteOrder = (orderId: string) => {
@@ -138,11 +142,14 @@ const Orders = () => {
                           <td className="p-4 align-middle w-1/6">{order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : 'N/A'}</td>
                           <td className="p-4 align-middle w-1/6">
                               <div className="flex gap-5">
+                                <Tooltip text="View Details">
+                                  <Eye className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => handleViewOrder(order)} />
+                                </Tooltip>
                                 <Tooltip text="Edit Order">
-                                <Edit className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => handleEditOrder(order)}/>
+                                  <Edit className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => handleEditOrder(order)}/>
                                 </Tooltip>
                                 <Tooltip text="Delete Order">
-                                <Trash2 className="w-4 h-4 text-[#55AC9A] cursor-pointer" onClick={() => handleDeleteOrder(order.id)}/>
+                                  <Trash2 className="w-4 h-4 text-[#55AC9A] cursor-pointer" onClick={() => handleDeleteOrder(order.id)}/>
                                 </Tooltip>
                               </div>
                           </td>

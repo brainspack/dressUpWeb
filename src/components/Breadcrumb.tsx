@@ -66,6 +66,13 @@ const Breadcrumb: React.FC = () => {
         .then((data) => setSerial(data.serialNumber ? `Ord-${data.serialNumber + 999}` : null))
         .finally(() => setLoadingSerial(false));
     }
+    // Order view: /orders/view/:id
+    else if (segments[0] === 'orders' && segments[1] === 'view' && segments[2]) {
+      setLoadingSerial(true);
+      baseApi(`/orders/${segments[2]}`, { method: 'GET' })
+        .then((data) => setSerial(data.serialNumber ? `Ord-${data.serialNumber + 999}` : null))
+        .finally(() => setLoadingSerial(false));
+    }
   }, [location.pathname]);
 
   // Build the breadcrumb display

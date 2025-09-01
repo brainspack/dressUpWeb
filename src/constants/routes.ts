@@ -8,6 +8,7 @@ import NewShopForm from '../screens/shop/modules/NewShopForm';
 import ShopProfile from '../screens/shop/ShopProfile';
 import TailorProfile from '../screens/shop/modules/TailorProfile';
 import Orders from '../screens/orders/Orders';
+import OrderDetails from '../screens/orders/modules/OrderDetails';
 import UserProfile from '../screens/user/UserProfile';
 import NewOrderForm from '../screens/orders/modules/NewOrderForm';
 import TailorList from '../screens/shop/modules/TailorList';
@@ -68,6 +69,13 @@ export const ROUTES: RouteConfig[] = [
   {
     path: '/orders',
     component: Orders,
+    routeType: 'private',
+    allowedRoles: ['SHOP_OWNER', 'admin'],
+    useMainLayout: true,
+  },
+  {
+    path: '/orders/view/:id',
+    component: OrderDetails,
     routeType: 'private',
     allowedRoles: ['SHOP_OWNER', 'admin'],
     useMainLayout: true,

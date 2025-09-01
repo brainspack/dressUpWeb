@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Search, ShoppingBag, FileText, Bell } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import { Input } from "./ui/input";
 import useAuthStore, { User } from '../store/useAuthStore';
 
@@ -47,44 +47,15 @@ const Header: React.FC<HeaderProps> = ({ title, onToggleSidebar }) => {
           />
         </div>
 
-        {/* Icons with Badges */}
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <ShoppingBag
-              className="text-gray-600 cursor-pointer"
-              size={20}
-            />
-            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full ring-2 ring-white bg-red-500 text-[8px] text-white flex items-center justify-center">
-              3
-            </span>
-          </div>
-          <div className="relative">
-            <FileText
-              className="text-gray-600 cursor-pointer"
-              size={20}
-            />
-            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full ring-2 ring-white bg-red-500 text-[8px] text-white flex items-center justify-center">
-              6
-            </span>
-          </div>
-          <div className="relative">
-            <Bell className="text-gray-600 cursor-pointer" size={20} />
-            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full ring-2 ring-white bg-red-500 text-[8px] text-white flex items-center justify-center">
-              9
-            </span>
-          </div>
-        </div>
+        {/* Removed notification icons for cleaner header */}
 
         {/* User Profile */}
         <div className="flex items-center ml-6">
           <span className="mr-2 text-sm font-medium">
             {user?.role ? user.role : 'User'}
           </span>
-          <span className="mr-2 text-xs text-gray-500">
-            {user?.mobileNumber ? user.mobileNumber : ''}
-          </span>
           <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-semibold">
-            {user?.mobileNumber ? (user.mobileNumber.slice(0, 2).toUpperCase() || 'SE') : 'SE'}
+            {user?.phone ? (user.phone.slice(0, 2).toUpperCase() || 'SE') : 'SE'}
           </div>
         </div>
       </div>

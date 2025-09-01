@@ -213,7 +213,7 @@ const ShopProfile: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                   {/* Total Orders Card */}
                   <ReusableCard>
-                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mb-2">
+                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mt-4 mb-2">
                       <Package size={24} />
                     </div>
                     <div className="text-2xl font-bold">{shopData.totalOrders || 0}</div>
@@ -221,7 +221,7 @@ const ShopProfile: React.FC = () => {
                   </ReusableCard>
                   {/* Total Tailors Card */}
                   <ReusableCard>
-                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mb-2">
+                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mt-4 mb-2 ">
                       <Shirt size={24} />
                     </div>
                     <div className="text-2xl font-bold">{shopData.totalActiveTailors || 0}</div>
@@ -229,7 +229,7 @@ const ShopProfile: React.FC = () => {
                   </ReusableCard>
                   {/* Delivered Orders Card */}
                   <ReusableCard>
-                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mb-2">
+                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mt-4 mb-2 ">
                       <Truck size={24} />
                     </div>
                     <div className="text-2xl font-bold">{shopData.deliveredOrders || 0}</div>
@@ -237,7 +237,7 @@ const ShopProfile: React.FC = () => {
                   </ReusableCard>
                   {/* Pending Orders Card */}
                   <ReusableCard>
-                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mb-2">
+                    <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mt-4 mb-2 ml-1">
                       <Clock size={24} />
                     </div>
                     <div className="text-2xl font-bold">{shopData.pendingOrders || 0}</div>

@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import useAuthStore, { User } from '../store/useAuthStore'
-import { ShoppingBag,  Package as PackageIcon,  Users, Star, Store, Scissors } from 'lucide-react'
+import { ShoppingBag,  Package as PackageIcon,  Users, Store, Scissors } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 // Import reusable UI components
@@ -11,6 +11,19 @@ import { useShopStore } from '../store/useShopStore';
 import { useTailorStore } from '../store/useTailorStore';
 import { useCustomerStore } from '../store/useCustomerStore';
 import { useOrderStore } from '../store/useOrderStore';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as ReTooltip,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from 'recharts';
 
 type CountKey = 'shops' | 'tailors' | 'customers' | 'orders';
 
@@ -56,6 +69,7 @@ const Dashboard: React.FC = () => {
   const logout = useAuthStore((state) => state.logout)
   const navigate = useNavigate()
   const location = useLocation();
+  const [range, setRange] = useState<'today' | 'last3' | 'last7' | 'last30' | 'last365'>('today')
 
   // Fetch data from stores
   const { shops, fetchShops } = useShopStore();
@@ -96,6 +110,67 @@ const Dashboard: React.FC = () => {
     customers: filteredCustomers.length,
     orders: filteredOrders.length,
   };
+
+  // Earnings helpers
+  const getOrderTotal = (order: any): number => {
+    const costs = Array.isArray(order.costs) ? order.costs : [];
+    if (costs.length > 0 && typeof costs[0]?.totalCost === 'number') return costs[0].totalCost;
+    const sum = costs.reduce((acc: number, c: any) => acc + (c?.totalCost ?? 0), 0);
+    return Number.isFinite(sum) ? sum : 0;
+  };
+
+  const filterByRange = useMemo(() => {
+    const now = new Date();
+    let start = new Date();
+    if (range === 'today') start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (range === 'last3') start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2);
+    if (range === 'last7') start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+    if (range === 'last30') start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+    if (range === 'last365') start = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+    return { start, now };
+  }, [range]);
+
+  const earningsData = useMemo(() => {
+    const { start, now } = filterByRange;
+    const dataMap: Record<string, number> = {};
+    const isYear = range === 'last365';
+
+    const labelForDate = (d: Date) => {
+      if (isYear) return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}`;
+      return `${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+    };
+
+    // seed labels for consistent x-axis
+    const seed = new Date(start);
+    while (seed <= now) {
+      const label = labelForDate(seed);
+      dataMap[label] = 0;
+      if (isYear) seed.setMonth(seed.getMonth() + 1);
+      else seed.setDate(seed.getDate() + 1);
+    }
+
+    filteredOrders.forEach((o) => {
+      const dateStr = (o.orderDate || o.createdAt);
+      if (!dateStr) return;
+      const d = new Date(dateStr);
+      if (d < start || d > now) return;
+      const label = labelForDate(d);
+      dataMap[label] = (dataMap[label] ?? 0) + getOrderTotal(o);
+    });
+
+    return Object.entries(dataMap).map(([label, total]) => ({ label, total }));
+  }, [filteredOrders, filterByRange, range]);
+
+  const statusPieData = useMemo(() => {
+    const statusToCount: Record<string, number> = {};
+    filteredOrders.forEach(o => {
+      const key = (o.status || 'UNKNOWN').toString();
+      statusToCount[key] = (statusToCount[key] ?? 0) + 1;
+    });
+    return Object.entries(statusToCount).map(([name, value]) => ({ name, value }));
+  }, [filteredOrders]);
+
+  const PIE_COLORS = ['#55AC8A', '#F59E0B', '#3B82F6', '#EF4444', '#10B981', '#8B5CF6'];
 
   // Show loader if any data is loading
   const isLoading = !shops.length && !tailors.length && !customers.length && !orders.length;
@@ -160,56 +235,54 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  <ReusableCard title="Sales" className="lg:col-span-2">
-                    <div className="h-64 bg-gray-200 rounded-md flex items-center justify-center text-gray-500">Sales Chart Placeholder</div>
+                  <ReusableCard
+                    title={
+                      <div className="flex items-center justify-between">
+                        <span>Earnings</span>
+                        <select
+                          className="text-sm border rounded px-2 py-1"
+                          value={range}
+                          onChange={(e) => setRange(e.target.value as any)}
+                        >
+                          <option value="today">Today</option>
+                          <option value="last3">Last 3 days</option>
+                          <option value="last7">Last week</option>
+                          <option value="last30">Last month</option>
+                          <option value="last365">Last year</option>
+                        </select>
+                      </div>
+                    }
+                    className="lg:col-span-2"
+                  >
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={earningsData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="label" />
+                          <YAxis />
+                          <ReTooltip formatter={(v: any) => `₹${v}`} />
+                          <Bar dataKey="total" fill="#55AC8A" name="Earnings" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </ReusableCard>
-                  <ReusableCard title="Transactions">
-                    <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3"><Star size={20} /></div>
-                        <div>
-                          <p className="font-semibold text-sm">Twitter Subscription</p>
-                          <p className="text-xs text-gray-500">$159.69</p>
-                        </div>
-                      </div>
-                      <span className="text-green-500 text-sm font-semibold">+</span>
-                    </div>
-                    <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-3"><Star size={20} /></div>
-                        <div>
-                          <p className="font-semibold text-sm">Xbox Purchased</p>
-                          <p className="text-xs text-gray-500">$36.38</p>
-                        </div>
-                      </div>
-                      <span className="text-red-500 text-sm font-semibold">-</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center mr-3"><Star size={20} /></div>
-                        <div>
-                          <p className="font-semibold text-sm">Youtube Subscription</p>
-                          <p className="text-xs text-gray-500">$23.85</p>
-                        </div>
-                      </div>
-                      <span className="text-green-500 text-sm font-semibold">+</span>
+
+                  <ReusableCard title="Orders by Status">
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie dataKey="value" data={statusPieData} outerRadius={90} label>
+                            {statusPieData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Legend />
+                          <ReTooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
                     </div>
                   </ReusableCard>
                 </div>
-
-                <ReusableCard className="bg-blue-500 text-white flex flex-col items-center justify-end"  title="Orders">
-                  <div className="w-full max-w-xs flex flex-col items-center">
-                    <div className="w-1/2 h-6 bg-red-500 mb-1"></div>
-                    <div className="w-2/3 h-6 bg-pink-500 mb-1"></div>
-                    <div className="w-full h-6 bg-yellow-500 mb-1"></div>
-                    <div className="w-2/3 h-6 bg-green-500 mb-1"></div>
-                    <div className="w-1/2 h-6 bg-teal-500 mb-1"></div>
-                    <div className="w-1/3 h-6 bg-cyan-500 mb-1"></div>
-                    <div className="w-full h-6 bg-blue-400 mb-1"></div>
-                    <div className="w-2/3 h-6 bg-indigo-500 mb-1"></div>
-                    <div className="w-1/2 h-6 bg-purple-500"></div>
-                  </div>
-                </ReusableCard>
               </>
             )}
           </div>
