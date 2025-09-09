@@ -21,8 +21,8 @@ export const measurementItemSchema = z.object({
 
 export const clothingItemSchema = z.object({
   type: z.string().min(1, 'Type is required'),
-  color: z.string().min(1, 'Color is required'),
-  fabric: z.string().min(1, 'Fabric is required'),
+  color: z.string().optional(),
+  fabric: z.string().optional(),
   designNotes: z.string().optional(),
   imageUrls: z.array(z.string().url()).optional(),
   videoUrls: z.array(z.string().url()).optional(),
@@ -45,8 +45,18 @@ export const formSchema = z.object({
   status: z.enum(['NEW', 'PENDING', 'DELIVERED', 'CANCELLED', 'status']),
   orderDate: z.string(),
   deliveryDate: z.string().optional().nullable(),
+  orderType: z.enum(['STITCHING', 'ALTERATION']).default('STITCHING'),
+  alterationPrice: z.number().nonnegative().optional(),
   clothes: z.array(clothingItemSchema).min(1, 'At least one clothing item is required'),
-  costs: z.array(costSchema).min(1, 'At least one cost item is required'),
+}).refine((data) => {
+  // If order type is ALTERATION, alteration price should be provided
+  if (data.orderType === 'ALTERATION') {
+    return data.alterationPrice !== undefined && data.alterationPrice > 0;
+  }
+  return true;
+}, {
+  message: "Alteration price is required for alteration orders",
+  path: ["alterationPrice"],
 });
 
 export type OrderFormData = z.infer<typeof formSchema>;

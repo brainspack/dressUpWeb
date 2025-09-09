@@ -132,13 +132,13 @@ const Login = () => {
             <div className="flex justify-end mb-4">
               {/* <a href="#" className="text-xs text-[#6C4BC1] hover:underl  ine">Forgot password?</a> */}
             </div>
-            <Button type="submit" className="w-full bg-[#6C4BC1] hover:bg-[#5a3ea6] text-white mb-3" disabled={isLoading}>
+            <Button type="submit" className="login-button w-full mb-3" disabled={isLoading}>
               {isLoading ? 'Loading...' : 'Send OTP'}
             </Button>
             {apiError && <p className="text-red-500 mt-2">{apiError}</p>}
             <Button
               type="button"
-              className="w-full border border-[#6C4BC1] text-[#ffffff] rounded-md py-2 mt-1 hover:bg-[#f3f0fa] transition"
+              className="login-button w-full mt-1"
               onClick={() => {
                 // Optionally handle signup navigation here
               }}
@@ -161,13 +161,12 @@ const Login = () => {
               className="mb-2"
             />
             {otpError && <p className="text-red-500 text-sm mb-2">{otpError}</p>}
-            <Button type="submit" className="w-full bg-[#6C4BC1] hover:bg-[#5a3ea6] text-white mb-3" disabled={otpLoading}>
+            <Button type="submit" className="login-button w-full mb-3" disabled={otpLoading}>
               {otpLoading ? 'Verifying...' : 'Verify OTP'}
-             
             </Button>
             <Button
               type="button"
-              className="w-full border border-[#6C4BC1] text-[#ffffff] rounded-md py-2 mt-1 hover:bg-[#f3f0fa] transition"
+              className="login-button w-full mt-1"
               onClick={() => { setOtpSent(false); setOtp(''); setOtpError(''); reset(); }}
             >
               Change Phone Number

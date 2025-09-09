@@ -217,3 +217,75 @@ html, body, #root {
   scrollbar-width: thin;
   scrollbar-color: rgba(100,116,139,0.6) transparent;
 }
+
+/* Override global button styles for specific buttons */
+.reset-button {
+  background-color: #b5b9c0 !important;
+  color: white !important;
+  border: 1px solid #b5b9c0 !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  text-align: center !important;
+  align-items: center !important;
+  display: flex !important;
+  justify-content: center !important;
+  padding: 0 12px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+}
+
+.reset-button:hover {
+  background-color: #6b7280 !important;
+  border-color: #6b7280 !important;
+}
+
+/* Override global button styles for login buttons */
+.login-button {
+  background-color: #6C4BC1 !important;
+  color: white !important;
+  border: none !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  text-align: center !important;
+  align-items: center !important;
+  display: flex !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  border-radius: 6px !important;
+  transition: background-color 0.2s !important;
+}
+
+.login-button:hover {
+  background-color: #5a3ea6 !important;
+}
+
+.login-button:disabled {
+  background-color: #9ca3af !important;
+  cursor: not-allowed !important;
+}
+
+/* Override global button styles for secondary login buttons */
+.login-secondary-button {
+  background-color: transparent !important;
+  color: #6C4BC1 !important;
+  border: 1px solid #6C4BC1 !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  text-align: center !important;
+  align-items: center !important;
+  display: flex !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  border-radius: 6px !important;
+  transition: all 0.2s !important;
+}
+
+.login-secondary-button:hover {
+  background-color: #f3f0fa !important;
+  color: #5a3ea6 !important;
+}

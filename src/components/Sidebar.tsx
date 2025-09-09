@@ -54,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse, onCreate
       style={{ height: '100vh', overflowY: 'auto' }}
     >
       {/* Logo */}
-      <div className={`flex items-center ${isCollapsed ? 'justify-center p-6' : 'justify-between p-6'} border-b border-gray-200`}>
+      <div className={`flex items-center ${isCollapsed ? 'justify-center px-6 py-4.5' : 'justify-between px-6 py-4.5'} border-b border-gray-200`}>
         <img
           src={isCollapsed ? '/assets/Group 51.png' : '/assets/final-header-brainspack-logo.svg'}
           alt="brainspack logo"
@@ -63,7 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse, onCreate
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 px-4 py-4">
         <ul>
           {navItems.map((item) => {
             const isActive = location.pathname === item.link || 
@@ -116,7 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse, onCreate
       </nav>
 
       {/* Logout Button */}
-      <div className="p-4 border-t border-gray-200 w-full">
+      <div className="px-4 py-4 border-t border-gray-200 w-full">
         <Button
            variant= "mintGreen"
           onClick={handleLogout}
@@ -127,13 +127,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse, onCreate
           <LogOut size={20} className="min-w-[20px] min-h-[20px]" />
           {!isCollapsed && <span className="ml-2">Logout</span>}
         </Button>
-
-
       </div>
 
       {/* Footer */}
       {!isCollapsed && (
-        <div className="p-4 text-center text-xs text-gray-500 border-t border-gray-200">
+        <div className="px-4 py-4 text-center text-xs text-gray-500 border-t border-gray-200">
           © Brainspack 2025
         </div>
       )}

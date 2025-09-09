@@ -77,6 +77,10 @@ const OrderDetails: React.FC = () => {
                     }>
                       <SectionRow label="Name" value={order.customer?.name} />
                       <SectionRow label="Status" value={order.status} />
+                      <SectionRow label="Order Type" value={order.orderType || 'STITCHING'} />
+                      {order.orderType === 'ALTERATION' && order.alterationPrice && (
+                        <SectionRow label="Alteration Price" value={`₹${order.alterationPrice}`} />
+                      )}
                       <SectionRow label="Order Date" value={formatDate(order.orderDate || order.createdAt)} />
                       <SectionRow label="Delivery Date" value={formatDate(order.deliveryDate)} />
                     </ReusableCard>
@@ -92,15 +96,17 @@ const OrderDetails: React.FC = () => {
                   </div>
 
                   <div className="mt-6 grid grid-cols-1 gap-6">
-                    <ReusableCard title="Clothes">
+                    <ReusableCard title={order.orderType === 'ALTERATION' ? 'Alteration Items' : 'Clothes'}>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(order.clothes || []).map((c, idx) => (
                           <div key={idx} className="rounded-lg border p-4">
                             <div className="font-semibold mb-2">{c.type || 'Item'} {idx + 1}</div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                              <div><span className="text-gray-500">Color:</span> {c.color || 'N/A'}</div>
-                              <div><span className="text-gray-500">Fabric:</span> {c.fabric || 'N/A'}</div>
-                              <div className="col-span-2"><span className="text-gray-500">Notes:</span> {c.designNotes || '—'}</div>
+                            <div className="grid grid-cols-1 gap-2 text-sm">
+                              {order.orderType === 'ALTERATION' ? (
+                                <div><span className="text-gray-500">Alteration Notes:</span> {c.designNotes || 'For alteration'}</div>
+                              ) : (
+                                <div><span className="text-gray-500">Notes:</span> {c.designNotes || '—'}</div>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -139,26 +145,6 @@ const OrderDetails: React.FC = () => {
                       </div>
                     </ReusableCard>
 
-                    <ReusableCard title="Costs">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {(order.costs || []).map((c, idx) => (
-                          <div key={idx} className="rounded-lg bg-gray-50 p-4">
-                            <div className="flex items-center justify-between">
-                              <span className="text-gray-500">Material</span>
-                              <span className="font-semibold">₹{c.materialCost ?? 0}</span>
-                            </div>
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="text-gray-500">Labor</span>
-                              <span className="font-semibold">₹{c.laborCost ?? 0}</span>
-                            </div>
-                            <div className="flex items-center justify-between mt-2 border-t pt-2">
-                              <span className="text-gray-800">Total</span>
-                              <span className="font-bold text-gray-900">₹{c.totalCost ?? 0}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ReusableCard>
                   </div>
                 </CardContent>
               </ReusableCard>

@@ -89,17 +89,20 @@ const Dashboard: React.FC = () => {
     navigate('/login')
   }
 
-  // Filtered arrays for shop_owner
-  const filteredShops = user?.role?.toLowerCase() === 'shop_owner'
+  // Filtered arrays for shop_owner vs super_admin
+  const isSuperAdmin = user?.role?.toLowerCase() === 'super_admin';
+  const isShopOwner = user?.role?.toLowerCase() === 'shop_owner';
+  
+  const filteredShops = isShopOwner
     ? shops.filter(s => s.id === user.shopId)
     : shops;
-  const filteredTailors = user?.role?.toLowerCase() === 'shop_owner'
+  const filteredTailors = isShopOwner
     ? tailors.filter(t => t.shopId === user.shopId)
     : tailors;
-  const filteredCustomers = user?.role?.toLowerCase() === 'shop_owner'
+  const filteredCustomers = isShopOwner
     ? customers.filter(c => c.shopId === user.shopId)
     : customers;
-  const filteredOrders = user?.role?.toLowerCase() === 'shop_owner'
+  const filteredOrders = isShopOwner
     ? orders.filter(o => o.shopId === user.shopId)
     : orders;
 
@@ -111,8 +114,22 @@ const Dashboard: React.FC = () => {
     orders: filteredOrders.length,
   };
 
-  // Earnings helpers
+  // Earnings helpers - Updated to match mobile app logic
   const getOrderTotal = (order: any): number => {
+    // Priority 1: Use totalAmount field directly (like mobile app)
+    if (order.totalAmount && typeof order.totalAmount === 'number') {
+      return order.totalAmount;
+    }
+    
+    // Priority 2: Sum material costs from clothes
+    if (order.clothes && Array.isArray(order.clothes) && order.clothes.length > 0) {
+      const clothesTotal = order.clothes.reduce((sum: number, cloth: any) => {
+        return sum + (cloth.materialCost || 0);
+      }, 0);
+      if (clothesTotal > 0) return clothesTotal;
+    }
+    
+    // Priority 3: Fallback to costs array (legacy)
     const costs = Array.isArray(order.costs) ? order.costs : [];
     if (costs.length > 0 && typeof costs[0]?.totalCost === 'number') return costs[0].totalCost;
     const sum = costs.reduce((acc: number, c: any) => acc + (c?.totalCost ?? 0), 0);
@@ -134,6 +151,7 @@ const Dashboard: React.FC = () => {
     const { start, now } = filterByRange;
     const dataMap: Record<string, number> = {};
     const isYear = range === 'last365';
+    let totalEarnings = 0;
 
     const labelForDate = (d: Date) => {
       if (isYear) return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}`;
@@ -149,17 +167,32 @@ const Dashboard: React.FC = () => {
       else seed.setDate(seed.getDate() + 1);
     }
 
+    // Process orders and calculate earnings
     filteredOrders.forEach((o) => {
       const dateStr = (o.orderDate || o.createdAt);
       if (!dateStr) return;
       const d = new Date(dateStr);
       if (d < start || d > now) return;
+      
+      const orderTotal = getOrderTotal(o);
       const label = labelForDate(d);
-      dataMap[label] = (dataMap[label] ?? 0) + getOrderTotal(o);
+      dataMap[label] = (dataMap[label] ?? 0) + orderTotal;
+      totalEarnings += orderTotal;
+      
+      // Log for super admin to see all shop earnings
+      if (isSuperAdmin) {
+        console.log(`[Admin Dashboard] Order ${o.id} from Shop ${o.shopId}: ₹${orderTotal} on ${label}`);
+      }
     });
 
+    // Log total earnings for super admin
+    if (isSuperAdmin) {
+      console.log(`[Admin Dashboard] Total earnings from all shops (${range}): ₹${totalEarnings}`);
+      console.log(`[Admin Dashboard] Processing ${filteredOrders.length} orders from ${filteredShops.length} shops`);
+    }
+
     return Object.entries(dataMap).map(([label, total]) => ({ label, total }));
-  }, [filteredOrders, filterByRange, range]);
+  }, [filteredOrders, filterByRange, range, isSuperAdmin, filteredShops.length]);
 
   const statusPieData = useMemo(() => {
     const statusToCount: Record<string, number> = {};
@@ -193,12 +226,12 @@ const Dashboard: React.FC = () => {
           <span className="inline-block px-2 py-1 rounded-full bg-gray-200 text-gray-700 font-semibold text-xs mb-2">
             Role: {user?.role?.toUpperCase()}
           </span>
-          {/* {user?.role?.toUpperCase() === 'SUPER_ADMIN' && (
-            <div className="text-green-700 font-bold mb-2">You have full access to all shops, tailors, customers, and orders.</div>
+          
+          {isShopOwner && (
+            <div className="text-blue-700 font-semibold mb-2">
+              🏪 Shop Owner: Viewing earnings from your shop only
+            </div>
           )}
-          {user?.role?.toUpperCase() === 'SHOP_OWNER' && (
-            <div className="text-blue-700 font-semibold mb-2">You can only view and manage your own shop, tailors, customers, and orders.</div>
-          )} */}
         </div>
         {/* Scrollable content area */}
         <div className="flex-1 overflow-y-auto p-3 bg-white">
@@ -238,7 +271,16 @@ const Dashboard: React.FC = () => {
                   <ReusableCard
                     title={
                       <div className="flex items-center justify-between">
-                        <span>Earnings</span>
+                        <div className="flex flex-col">
+                          <span>
+                            {isSuperAdmin ? 'Total Earnings (All Shops)' : 'Earnings'}
+                          </span>
+                          {isSuperAdmin && (
+                            <span className="text-xs text-gray-600">
+                              Aggregated from {filteredShops.length} shops
+                            </span>
+                          )}
+                        </div>
                         <select
                           className="text-sm border rounded px-2 py-1"
                           value={range}
@@ -254,32 +296,72 @@ const Dashboard: React.FC = () => {
                     }
                     className="lg:col-span-2"
                   >
-                    <div className="h-72">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={earningsData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="label" />
-                          <YAxis />
-                          <ReTooltip formatter={(v: any) => `₹${v}`} />
-                          <Bar dataKey="total" fill="#55AC8A" name="Earnings" />
-                        </BarChart>
-                      </ResponsiveContainer>
+                    <div className="h-80 overflow-hidden">
+                      {isSuperAdmin && (
+                        <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-green-800">
+                              Total Earnings ({range}):
+                            </span>
+                            <span className="text-lg font-bold text-green-900">
+                              ₹{earningsData.reduce((sum, item) => sum + item.total, 0).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="text-xs text-green-700 mt-1">
+                            From {filteredOrders.length} orders across {filteredShops.length} shops
+                          </div>
+                        </div>
+                      )}
+                      <div className="h-56">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart 
+                            data={earningsData} 
+                            margin={{ top: 5, right: 15, left: 5, bottom: 5 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis 
+                              dataKey="label" 
+                              tick={{ fontSize: 12 }}
+                              interval={0}
+                            />
+                            <YAxis 
+                              tick={{ fontSize: 12 }}
+                              domain={[0, 'dataMax + 100']}
+                            />
+                            <ReTooltip formatter={(v: any) => `₹${v}`} />
+                            <Bar dataKey="total" fill="#55AC8A" name="Earnings" radius={[2, 2, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
                   </ReusableCard>
 
                   <ReusableCard title="Orders by Status">
-                    <div className="h-72">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie dataKey="value" data={statusPieData} outerRadius={90} label>
-                            {statusPieData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Legend />
-                          <ReTooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
+                    <div className="h-80 overflow-hidden">
+                      <div className="h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie 
+                              dataKey="value" 
+                              data={statusPieData} 
+                              outerRadius={80} 
+                              label={false}
+                              cx="50%" 
+                              cy="50%"
+                            >
+                              {statusPieData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Legend 
+                              verticalAlign="bottom" 
+                              height={36}
+                              wrapperStyle={{ fontSize: '12px' }}
+                            />
+                            <ReTooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
                   </ReusableCard>
                 </div>

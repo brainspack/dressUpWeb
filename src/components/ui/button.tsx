@@ -11,7 +11,9 @@ const buttonVariants = cva(
       variant: {
       
         destructive:
-          "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-gray-600 text-white shadow-xs hover:bg-gray-700 focus-visible:ring-gray-600/20 dark:focus-visible:ring-gray-600/40 dark:bg-gray-700",
+        resetButton:
+          "bg-gray-600 text-white shadow-xs hover:bg-gray-700 focus-visible:ring-gray-600/20 border border-gray-600",
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary:

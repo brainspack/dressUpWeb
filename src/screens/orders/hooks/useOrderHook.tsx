@@ -98,6 +98,8 @@ export const useOrderHook = ({
         status: response.status,
         orderDate: toDateInputValue(response.orderDate) || toDateInputValue(response.createdAt),
         deliveryDate: toDateInputValue(response.deliveryDate) || '',
+        orderType: response.orderType || 'STITCHING',
+        alterationPrice: response.alterationPrice || undefined,
         clothes: (response.clothes || []).map((item: any) => {
           // Use measurements that are nested within this clothing item
           const itemMeasurements = item.measurements || [];
@@ -142,19 +144,12 @@ export const useOrderHook = ({
 
           return {
             type: item.type || '',
-            color: item.color || '',
-            fabric: item.fabric || '',
             designNotes: item.designNotes || '',
             imageUrls: item.imageUrls || [],
             videoUrls: item.videoUrls || [],
             measurements: [measurement]
           };
-        }),
-        costs: (response.costs || []).map((cost: any) => ({
-          materialCost: cost.materialCost || 0,
-          laborCost: cost.laborCost || 0,
-          totalCost: cost.totalCost || 0
-        }))
+        })
       };
 
       return orderData;
@@ -252,8 +247,9 @@ export const useOrderHook = ({
           status: 'PENDING' as const,
           orderDate: new Date().toISOString().split('T')[0],
           deliveryDate: null,
+          orderType: 'STITCHING' as const,
+          alterationPrice: undefined,
           clothes: [],
-          costs: [{ materialCost: 0, laborCost: 0, totalCost: 0 }],
         };
       }
       // Default values for a new order
@@ -266,6 +262,8 @@ export const useOrderHook = ({
         status: 'PENDING' as const,
         orderDate: new Date().toISOString().split('T')[0],
         deliveryDate: null,
+        orderType: 'STITCHING' as const,
+        alterationPrice: undefined,
         clothes: [{
           type: '',
           color: '',
@@ -418,6 +416,8 @@ export const useOrderHook = ({
 
       const orderData = {
         ...data,
+        orderType: data.orderType || 'STITCHING',
+        alterationPrice: data.alterationPrice || undefined,
         clothes: data.clothes.map(cloth => {
           const { measurements, ...clothData } = cloth;
           return clothData;
@@ -449,11 +449,7 @@ export const useOrderHook = ({
             // Always return the measurement, even if all values are null
             return [formattedMeasurement];
           }),
-        costs: data.costs.map(cost => ({
-          materialCost: cost.materialCost ?? 0,
-          laborCost: cost.laborCost ?? 0,
-          totalCost: cost.totalCost ?? 0,
-        })),
+        costs: [], // Costs are now handled within clothes (materialCost and price)
         orderDate: validateAndFormatDate(data.orderDate) || new Date().toISOString(),
         deliveryDate: validateAndFormatDate(data.deliveryDate),
       };

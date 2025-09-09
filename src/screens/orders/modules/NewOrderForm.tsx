@@ -79,6 +79,19 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
   // Add gender state for each clothing item
   const [genders, setGenders] = useState<{ [key: number]: 'male' | 'female' }>({});
 
+  // Handle order type change - auto-add cloth for alteration orders
+  useEffect(() => {
+    const orderType = watch('orderType');
+    const currentClothes = watch('clothes') || [];
+    
+    if (orderType === 'ALTERATION' && currentClothes.length === 0) {
+      // Auto-add a cloth item for alteration orders
+      appendClothingItem();
+      // Set default design notes for alteration
+      setValue(`clothes.0.designNotes`, 'For alteration');
+    }
+  }, [watch('orderType'), watch('clothes'), appendClothingItem, setValue]);
+
   // Set gender for each item based on type on mount or when fields change
   useEffect(() => {
     setGenders(prev => {
@@ -226,80 +239,121 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
               {shopIdError && <p className="text-red-500">Error: {shopIdError}</p>}
             </div>
 
-            {/* Top Card for Tailor/Status/Date fields */}
+            {/* Top Card for Order fields */}
             <Card className="mb-6">
               <CardContent className="px-6 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                  {/* Tailor Name */}
-                  <div className="flex flex-col">
-                    <label htmlFor="tailorName" className="block text-sm font-medium text-gray-700 mb-1">Tailor Name</label>
-                    <SelectField
-                      name="tailorName"
-                      value={watch('tailorId') || ''}
-                      onValueChange={handleTailorSelect}
-                      options={[
-                        { label: 'Select a tailor', value: 'no-selection-placeholder' },
-                        ...tailors
-                          .filter(tailor => tailor.shopId === watch('shopId'))
-                          .map(tailor => ({ label: tailor.label, value: tailor.value }))
-                      ]}
-                      placeholder="Select a tailor"
-                      className="w-full"
-                    />
+                <div className="space-y-4">
+                  {/* Top Row: Order Date, Delivery Date, Order Type */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    {/* Order Date */}
+                    <div className="flex flex-col">
+                      <label htmlFor="orderDate" className="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
+                      <Input
+                        id="orderDate"
+                        type="date"
+                        {...register('orderDate')}
+                        error={(errors.orderDate as any)?.message || errors.orderDate}
+                        className="w-full h-10"
+                        disabled
+                      />
+                    </div>
+                    {/* Delivery Date */}
+                    <div className="flex flex-col">
+                      <label htmlFor="deliveryDate" className="block text-sm font-medium text-gray-700 mb-1">Delivery Date</label>
+                      <Input
+                        id="deliveryDate"
+                        type="date"
+                        {...register('deliveryDate')}
+                        error={(errors.deliveryDate as any)?.message || errors.deliveryDate}
+                        className="w-full h-10"
+                      />
+                    </div>
+                    {/* Order Type */}
+                    <div className="flex flex-col">
+                      <label htmlFor="orderType" className="block text-sm font-medium text-gray-700 mb-1">Order Type</label>
+                      <SelectField
+                        name="orderType"
+                        value={watch('orderType') || 'STITCHING'}
+                        onValueChange={(value) => setValue('orderType', value as any)}
+                        options={[
+                          { label: 'Stitching', value: 'STITCHING' },
+                          { label: 'Alteration', value: 'ALTERATION' }
+                        ]}
+                        placeholder="Select order type"
+                        className="w-full [&>button]:h-10"
+                      />
+                    </div>
                   </div>
-                  {/* Tailor Number */}
-                  <div className="flex flex-col">
-                    <label htmlFor="tailorNumber" className="block text-sm font-medium text-gray-700 mb-1">Tailor Number</label>
-                    <Input
-                      id="tailorNumber"
-                      {...register('tailorNumber')}
-                      readOnly
-                      disabled
-                      value={watch('tailorNumber')}
-                      className="w-full min-w-[150px]"
-                      error={(errors.tailorName as any)?.message || errors.tailorName}
-                    />
+                  
+                  {/* Bottom Row: Tailor Name, Tailor Number, Status */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    {/* Tailor Name */}
+                    <div className="flex flex-col">
+                      <label htmlFor="tailorName" className="block text-sm font-medium text-gray-700 mb-1">Tailor Name</label>
+                      <SelectField
+                        name="tailorName"
+                        value={watch('tailorId') || ''}
+                        onValueChange={handleTailorSelect}
+                        options={[
+                          { label: 'Select a tailor', value: 'no-selection-placeholder' },
+                          ...tailors
+                            .filter(tailor => tailor.shopId === watch('shopId'))
+                            .map(tailor => ({ label: tailor.label, value: tailor.value }))
+                        ]}
+                        placeholder="Select a tailor"
+                        className="w-full [&>button]:h-10"
+                      />
+                    </div>
+                    {/* Tailor Number */}
+                    <div className="flex flex-col">
+                      <label htmlFor="tailorNumber" className="block text-sm font-medium text-gray-700 mb-1">Tailor Number</label>
+                      <Input
+                        id="tailorNumber"
+                        {...register('tailorNumber')}
+                        readOnly
+                        disabled
+                        value={watch('tailorNumber')}
+                        className="w-full h-10"
+                        error={(errors.tailorName as any)?.message || errors.tailorName}
+                      />
+                    </div>
+                    {/* Status */}
+                    <div className="flex flex-col">
+                      <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <SelectField
+                        name="status"
+                        value={watch('status')}
+                        onValueChange={(value) => setValue('status', value as any)}
+                        options={[
+                          { label: 'Select status', value: 'status' },
+                          { label: 'Pending', value: 'PENDING' },
+                          { label: 'Delivered', value: 'DELIVERED' },
+                          { label: 'Cancelled', value: 'CANCELLED' },
+                        ]}
+                        placeholder="Select status"
+                        className="w-full [&>button]:h-10"
+                      />
+                    </div>
                   </div>
-                  {/* Status */}
-                  <div className="flex flex-col">
-                    <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <SelectField
-                      name="status"
-                      value={watch('status')}
-                      onValueChange={(value) => setValue('status', value as any)}
-                      options={[
-                        { label: 'Select status', value: 'status' },
-                        { label: 'Pending', value: 'PENDING' },
-                        { label: 'Delivered', value: 'DELIVERED' },
-                        { label: 'Cancelled', value: 'CANCELLED' },
-                      ]}
-                      placeholder="Select status"
-                      className="w-full"
-                    />
-                  </div>
-                  {/* Order Date */}
-                  <div className="flex flex-col">
-                    <label htmlFor="orderDate" className="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
-                    <Input
-                      id="orderDate"
-                      type="date"
-                      {...register('orderDate')}
-                      error={(errors.orderDate as any)?.message || errors.orderDate}
-                      className="w-full"
-                      disabled
-                    />
-                  </div>
-                  {/* Delivery Date */}
-                  <div className="flex flex-col">
-                    <label htmlFor="deliveryDate" className="block text-sm font-medium text-gray-700 mb-1">Delivery Date</label>
-                    <Input
-                      id="deliveryDate"
-                      type="date"
-                      {...register('deliveryDate')}
-                      error={(errors.deliveryDate as any)?.message || errors.deliveryDate}
-                      className="w-full"
-                    />
-                  </div>
+                  
+                  {/* Alteration Price - Only show when order type is ALTERATION */}
+                  {watch('orderType') === 'ALTERATION' && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                      <div className="flex flex-col">
+                        <label htmlFor="alterationPrice" className="block text-sm font-medium text-gray-700 mb-1">Alteration Price (₹)</label>
+                        <Input
+                          id="alterationPrice"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...register('alterationPrice', { valueAsNumber: true })}
+                          placeholder="Enter alteration price"
+                          error={(errors.alterationPrice as any)?.message || errors.alterationPrice}
+                          className="w-full h-10"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -350,18 +404,25 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                           placeholder="Select type"
                           className="w-full"
                         />
+                        
+                        {/* Color field */}
                         <Input
                           label="Color"
                           {...register(`clothes.${index}.color`)}
-                          placeholder="e.g., blue, red, black"
+                          placeholder="Enter color"
                           error={(errors.clothes?.[index]?.color as any)?.message || errors.clothes?.[index]?.color}
+                          className="w-full"
                         />
+                        
+                        {/* Fabric field */}
                         <Input
                           label="Fabric"
                           {...register(`clothes.${index}.fabric`)}
-                          placeholder="e.g., georgette, cotton, silk"
+                          placeholder="Enter fabric type"
                           error={(errors.clothes?.[index]?.fabric as any)?.message || errors.clothes?.[index]?.fabric}
+                          className="w-full"
                         />
+                        
                         <Textarea
                           label="Design Notes"
                           {...register(`clothes.${index}.designNotes`)}
@@ -516,14 +577,13 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                 Add Item
               </Button>
               {fields.length > 0 && (
-                <Button
+                <button
                   type="button"
-                  variant="destructive"
                   onClick={handleRemoveOrResetClothingItem}
-                // className="flex-1"
+                  className="reset-button px-3 py-3  "
                 >
                   {fields.length === 1 ? "Reset Item" : "Remove Item"}
-                </Button>
+                </button>
               )}
             </div>
 
