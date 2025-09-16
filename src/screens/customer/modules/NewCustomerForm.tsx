@@ -74,7 +74,7 @@ const NewCustomerForm: React.FC<NewCustomerFormProps> = ({
     } else {
       reset();
     }
-    const subscription = watch((value) => {
+    const subscription = watch((value:any) => {
       setFormData(value)
     })
     return () => subscription.unsubscribe()
