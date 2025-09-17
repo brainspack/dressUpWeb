@@ -48,6 +48,7 @@ export const formSchema = z.object({
   orderType: z.enum(['STITCHING', 'ALTERATION']).default('STITCHING'),
   alterationPrice: z.number().nonnegative().optional(),
   clothes: z.array(clothingItemSchema).min(1, 'At least one clothing item is required'),
+  costs: z.array(costSchema).optional().default([{ materialCost: 0, laborCost: 0, totalCost: 0 }]),
 }).refine((data) => {
   // If order type is ALTERATION, alteration price should be provided
   if (data.orderType === 'ALTERATION') {

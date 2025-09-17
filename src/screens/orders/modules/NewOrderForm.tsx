@@ -197,7 +197,7 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
         <CardContent className="px-6 py-1">
           {/* Back Button */}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 w-full">
+          <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6 w-full">
             {/* Add debugging for form submission */}
             <div className="text-xs text-gray-500">
               {/* <p>Form errors: {Object.keys(errors).length > 0 ? JSON.stringify(errors, null, 2) : 'No errors'}</p> */}
@@ -630,10 +630,6 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
               <Button
                 type="submit"
                 variant="mintGreen"
-                onClick={() => {
-                  setValue('orderDate', orderData.orderDate);
-                  setValue('deliveryDate', orderData.deliveryDate);
-                }}
               >
                 {submitButtonText}
               </Button>

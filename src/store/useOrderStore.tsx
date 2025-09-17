@@ -56,6 +56,8 @@ export interface Order {
   productName?: string; // Assuming a field for product name if not derived from clothes
   orderDate?: string; // Assuming a field for order date if not using createdAt directly
   deliveryDate?: string; // Assuming a field for delivery date
+  orderType?: 'STITCHING' | 'ALTERATION';
+  alterationPrice?: number | null;
 }
 
 interface OrderState {

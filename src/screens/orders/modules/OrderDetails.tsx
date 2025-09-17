@@ -14,10 +14,12 @@ const SectionRow: React.FC<{ label: string; value?: React.ReactNode }> = ({ labe
   </div>
 );
 
+type OrderWithType = Order & { orderType?: 'STITCHING' | 'ALTERATION'; alterationPrice?: number | null };
+
 const OrderDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<OrderWithType | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
