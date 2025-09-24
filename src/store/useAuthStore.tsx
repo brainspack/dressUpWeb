@@ -21,12 +21,16 @@ const useAuthStore = create<AuthState>((set) => ({
     return parsed;
   })(),
   setUser: (user: User) => {
+    console.log(`🏪 AUTH STORE: Setting user data:`, user);
     if (user) {
       localStorage.setItem('user', JSON.stringify(user))
+      console.log(`💾 AUTH STORE: User data saved to localStorage`);
     } else {
       localStorage.removeItem('user')
+      console.log(`🗑️ AUTH STORE: User data removed from localStorage`);
     }
     set({ user })
+    console.log(`✅ AUTH STORE: User state updated`);
   },
   logout: () => {
     localStorage.removeItem('user');

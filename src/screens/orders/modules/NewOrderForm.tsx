@@ -254,7 +254,7 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                         {...register('orderDate')}
                         error={(errors.orderDate as any)?.message || errors.orderDate}
                         className="w-full h-10"
-                        disabled
+                        value={watch('orderDate') || ''}
                       />
                     </div>
                     {/* Delivery Date */}
@@ -266,6 +266,7 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                         {...register('deliveryDate')}
                         error={(errors.deliveryDate as any)?.message || errors.deliveryDate}
                         className="w-full h-10"
+                        value={watch('deliveryDate') || ''}
                       />
                     </div>
                     {/* Order Type */}
@@ -311,7 +312,6 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                         id="tailorNumber"
                         {...register('tailorNumber')}
                         readOnly
-                        disabled
                         value={watch('tailorNumber')}
                         className="w-full h-10"
                         error={(errors.tailorName as any)?.message || errors.tailorName}
@@ -478,22 +478,9 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                             <div className="flex gap-1 w-full">
                               <ImageUploader
                                 label="Upload Images"
-                                onFilesChange={(files) => {
-                                  if (files) {
-                                    // Validate image formats
-                                    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-                                    const invalid = Array.from(files).find(file => !allowedTypes.includes(file.type));
-                                    if (invalid) {
-                                      setImageUploadErrors(prev => ({ ...prev, [index]: 'Only .jpg, .jpeg, or .png formats are allowed.' }));
-                                      return;
-                                    } else {
-                                      setImageUploadErrors(prev => ({ ...prev, [index]: '' }));
-                                    }
-                                    const urls = Array.from(files).map(file => URL.createObjectURL(file));
-                                    const current = watch(`clothes.${index}.imageUrls`) || [];
-                                    const newUrls = [...current, ...urls].slice(0, 2);
-                                    setValue(`clothes.${index}.imageUrls`, newUrls, { shouldDirty: true });
-                                  }
+                                onUploadSuccess={(urls) => {
+                                  setValue(`clothes.${index}.imageUrls`, urls, { shouldDirty: true });
+                                  setImageUploadErrors(prev => ({ ...prev, [index]: '' }));
                                 }}
                                 initialUrls={watch(`clothes.${index}.imageUrls`) || []}
                                 existingImageUrls={watch(`clothes.${index}.imageUrls`) || []}
@@ -511,22 +498,9 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                             <div className="flex gap-1 w-full">
                               <ImageUploader
                                 label="Upload Videos"
-                                onFilesChange={(files) => {
-                                  if (files) {
-                                    // Validate video formats
-                                    const allowedTypes = ['video/mp4', 'video/quicktime'];
-                                    const invalid = Array.from(files).find(file => !allowedTypes.includes(file.type));
-                                    if (invalid) {
-                                      setVideoUploadErrors(prev => ({ ...prev, [index]: 'Only .mp4 or .mov formats are allowed.' }));
-                                      return;
-                                    } else {
-                                      setVideoUploadErrors(prev => ({ ...prev, [index]: '' }));
-                                    }
-                                    const urls = Array.from(files).map(file => URL.createObjectURL(file));
-                                    const current = watch(`clothes.${index}.videoUrls`) || [];
-                                    const newUrls = [...current, ...urls].slice(0, 2);
-                                    setValue(`clothes.${index}.videoUrls`, newUrls, { shouldDirty: true });
-                                  }
+                                onUploadSuccess={(urls) => {
+                                  setValue(`clothes.${index}.videoUrls`, urls, { shouldDirty: true });
+                                  setVideoUploadErrors(prev => ({ ...prev, [index]: '' }));
                                 }}
                                 initialUrls={watch(`clothes.${index}.videoUrls`) || []}
                                 existingImageUrls={watch(`clothes.${index}.videoUrls`) || []}
@@ -602,7 +576,6 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                     {...register('costs.0.materialCost', { valueAsNumber: true })}
                     placeholder="0.00"
                     onChange={(e) => handleCostChange('materialCost', parseFloat(e.target.value) || 0)}
-                    value={costs[0]?.materialCost ?? ''}
                     error={(errors.costs?.[0]?.materialCost as any)?.message || errors.costs?.[0]?.materialCost}
                   />
                   <Input
@@ -611,7 +584,6 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                     {...register('costs.0.laborCost', { valueAsNumber: true })}
                     placeholder="0.00"
                     onChange={(e) => handleCostChange('laborCost', parseFloat(e.target.value) || 0)}
-                    value={costs[0]?.laborCost ?? ''}
                     error={(errors.costs?.[0]?.laborCost as any)?.message || errors.costs?.[0]?.laborCost}
                   />
                   <Input
@@ -620,7 +592,6 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({
                     {...register('costs.0.totalCost', { valueAsNumber: true })}
                     placeholder="0.00"
                     readOnly
-                    value={costs[0]?.totalCost ?? ''}
                     error={(errors.costs?.[0]?.totalCost as any)?.message || errors.costs?.[0]?.totalCost}
                   />
                 </div>

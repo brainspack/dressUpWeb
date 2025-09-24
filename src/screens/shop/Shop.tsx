@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Eye, Edit, Trash2, ShoppingBag, UserPlus, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getEffectiveRole } from '../../utils/roleUtils';
 
 import {
   Table,
@@ -120,7 +121,7 @@ const Shop: React.FC = () => {
 
   useEffect(() => {
     if (
-      user?.role?.toLowerCase() === 'shop_owner' &&
+      getEffectiveRole(user).toLowerCase() === 'shop_owner' &&
       user?.shopId &&
       shops.length > 0
     ) {
@@ -128,7 +129,7 @@ const Shop: React.FC = () => {
     }
   }, [user, shops, navigate]);
 
-  const isAdmin = user?.role?.toLowerCase() === 'super_admin';
+  const isAdmin = getEffectiveRole(user).toLowerCase() === 'super_admin';
   const totalShops = shops.length;
   const totalActiveShops = shops.filter(s => s.ownerId).length;
   const totalTailors = isAdmin ? tailors.length : tailors.filter(t => t.shopId === user?.shopId).length;
@@ -136,10 +137,10 @@ const Shop: React.FC = () => {
   const totalOrders = isAdmin ? orders.length : orders.filter(o => o.shopId === user?.shopId).length;
 
   const shopMetrics = [
-    { title: 'Total Shops', value: totalShops, description: `${totalShops} shops in database`, color: 'bg-blue-500' },
-    { title: 'Active Shops', value: totalActiveShops, description: `${totalActiveShops} active shops`, color: 'bg-green-500' },
-    { title: 'Tailor', value: totalTailors, description: `${totalTailors} tailors`, color: 'bg-orange-500' },
-    { title: 'Customers', value: totalCustomers, description: `${totalCustomers} customers`, color: 'bg-lime-600' },
+    { title: 'Total Shops', value: totalShops, description: `${totalShops} shops in database`, color: 'bg-teal-400' },
+    { title: 'Active Shops', value: totalActiveShops, description: `${totalActiveShops} active shops`, color: 'bg-indigo-400' },
+    { title: 'Tailor', value: totalTailors, description: `${totalTailors} tailors`, color: 'bg-amber-400' },
+    { title: 'Customers', value: totalCustomers, description: `${totalCustomers} customers`, color: 'bg-emerald-500' },
   ];
 
   if (loading) {
@@ -279,17 +280,10 @@ const Shop: React.FC = () => {
 
           <NewShopForm
             onFormSubmitSuccess={async () => {
+              // After creating/updating a shop, simply refresh the list and
+              // keep the user on the Shops screen (no redirect).
               handleCloseShopModal();
               await fetchShops();
-              const shops = useShopStore.getState().shops;
-              if (shops.length > 0) {
-                setUser({
-                  phone: user?.phone || '',
-                  role: user?.role || '',
-                  shopId: shops[0].id,
-                });
-                navigate(`/shop/shopprofile/${shops[0].id}`);
-              }
             }}
             editMode={!!shopToEdit}
             shopToEdit={shopToEdit ? {

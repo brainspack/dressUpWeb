@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import useAuthStore, { User } from '../store/useAuthStore'
 import { ShoppingBag,  Package as PackageIcon,  Users, Store, Scissors } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { getEffectiveRole } from '../utils/roleUtils'
 
 // Import reusable UI components
 import ReusableCard from "../components/ui/CustomCard";
@@ -70,6 +71,14 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation();
   const [range, setRange] = useState<'today' | 'last3' | 'last7' | 'last30' | 'last365'>('today')
+  
+  // Log user info when dashboard loads
+  useEffect(() => {
+    console.log(`🏠 DASHBOARD: User logged in:`, user);
+    // console.log(`👤 DASHBOARD: User role: ${user?.role}`);
+    // console.log(`📱 DASHBOARD: User phone: ${user?.phone}`);
+    // console.log(`🏪 DASHBOARD: User shopId: ${user?.shopId}`);
+  }, [user]);
 
   // Fetch data from stores
   const { shops, fetchShops } = useShopStore();
@@ -90,20 +99,20 @@ const Dashboard: React.FC = () => {
   }
 
   // Filtered arrays for shop_owner vs super_admin
-  const isSuperAdmin = user?.role?.toLowerCase() === 'super_admin';
-  const isShopOwner = user?.role?.toLowerCase() === 'shop_owner';
+  const isSuperAdmin = getEffectiveRole(user).toLowerCase() === 'super_admin';
+  const isShopOwner = getEffectiveRole(user).toLowerCase() === 'shop_owner';
   
   const filteredShops = isShopOwner
-    ? shops.filter(s => s.id === user.shopId)
+    ? shops.filter(s => s.id === user?.shopId)
     : shops;
   const filteredTailors = isShopOwner
-    ? tailors.filter(t => t.shopId === user.shopId)
+    ? tailors.filter(t => t.shopId === user?.shopId)
     : tailors;
   const filteredCustomers = isShopOwner
-    ? customers.filter(c => c.shopId === user.shopId)
+    ? customers.filter(c => c.shopId === user?.shopId)
     : customers;
   const filteredOrders = isShopOwner
-    ? orders.filter(o => o.shopId === user.shopId)
+    ? orders.filter(o => o.shopId === user?.shopId)
     : orders;
 
   // For dynamic counts
@@ -224,7 +233,7 @@ const Dashboard: React.FC = () => {
         {/* Role label and access message */}
         <div className="p-2">
           <span className="inline-block px-2 py-1 rounded-full bg-gray-200 text-gray-700 font-semibold text-xs mb-2">
-            Role: {user?.role?.toUpperCase()}
+            Role: {getEffectiveRole(user)?.toUpperCase()}
           </span>
           
           {isShopOwner && (

@@ -107,7 +107,31 @@ const OrderDetails: React.FC = () => {
                               {order.orderType === 'ALTERATION' ? (
                                 <div><span className="text-gray-500">Alteration Notes:</span> {c.designNotes || 'For alteration'}</div>
                               ) : (
-                                <div><span className="text-gray-500">Notes:</span> {c.designNotes || '—'}</div>
+                                <>
+                                  <div><span className="text-gray-500">Notes:</span> {c.designNotes || '—'}</div>
+                                  <div><span className="text-gray-500">Color:</span> {c.color || '—'}</div>
+                                  <div><span className="text-gray-500">Fabric:</span> {c.fabric || '—'}</div>
+                                </>
+                              )}
+                              {c.imageUrls && c.imageUrls.length > 0 && (
+                                <div className="mt-3">
+                                  <div className="text-gray-500 text-sm mb-2">Images:</div>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {c.imageUrls.map((imageUrl: string, imgIdx: number) => (
+                                      <div key={imgIdx} className="relative">
+                                        <img 
+                                          src={imageUrl} 
+                                          alt={`${c.type || 'Item'} ${idx + 1} - Image ${imgIdx + 1}`}
+                                          className="w-full h-24 object-cover rounded-lg border"
+                                          onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.style.display = 'none';
+                                          }}
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -127,18 +151,24 @@ const OrderDetails: React.FC = () => {
                           <tbody>
                             {(order.measurements || []).map((m: any, i: number) => (
                               Object.entries(m)
-                                .filter(([key]) => {
+                                .filter(([key, val]) => {
                                   const k = String(key).toLowerCase();
-                                  return ![
+                                  // Filter out system fields AND fields with no values
+                                  const isSystemField = [
                                     'id','_id','orderid','order_id','clothid','clothesid','clothingitemid','clothing_item_id',
                                     'customerid','shopid','tailorid','userid',
                                     'createdat','created_at','deletedat','deleted_at','updatedat','updated_at'
                                   ].includes(k);
+                                  
+                                  // Check if value exists and is not empty/null/undefined
+                                  const hasValue = val !== null && val !== undefined && val !== '' && val !== '—';
+                                  
+                                  return !isSystemField && hasValue;
                                 })
                                 .map(([key, val]: any, j: number) => (
                                   <tr key={`${i}-${j}`} className="border-t">
                                     <td className="py-2 pr-4 capitalize">{key}</td>
-                                    <td className="py-2">{val ?? '—'}</td>
+                                    <td className="py-2">{val}</td>
                                   </tr>
                                 ))
                             ))}

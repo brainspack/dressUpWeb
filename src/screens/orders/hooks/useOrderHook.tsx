@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { baseApi } from '../../../api/baseApi';
@@ -89,17 +89,34 @@ export const useOrderHook = ({
         const pad = (n: number) => n.toString().padStart(2, '0');
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
       };
+      const materialFromClothes = Array.isArray(response.clothes)
+        ? response.clothes.reduce((s: number, c: any) => s + (Number(c.materialCost) || 0), 0)
+        : 0;
+      const laborFromClothes = Array.isArray(response.clothes)
+        ? response.clothes.reduce((s: number, c: any) => s + (Number(c.price) || 0), 0)
+        : 0;
+
+      const apiCost = Array.isArray(response.costs) && response.costs.length > 0 ? response.costs[0] : null;
+
       const orderData: OrderFormData = {
         customerId: response.customerId,
         shopId: response.shopId,
         tailorName: response.tailorName || '',
         tailorNumber: response.tailorNumber || '',
-        tailorId: response.tailorId || '',
+        // Some backends use assignedTo as the tailorId field
+        tailorId: response.tailorId || response.assignedTo || '',
         status: response.status,
         orderDate: toDateInputValue(response.orderDate) || toDateInputValue(response.createdAt),
         deliveryDate: toDateInputValue(response.deliveryDate) || '',
         orderType: response.orderType || 'STITCHING',
         alterationPrice: response.alterationPrice || undefined,
+        costs: [{
+          materialCost: apiCost ? Number(apiCost.materialCost) || 0 : materialFromClothes,
+          laborCost: apiCost ? Number(apiCost.laborCost) || 0 : laborFromClothes,
+          totalCost: apiCost
+            ? (Number(apiCost.totalCost) || ((Number(apiCost.materialCost)||0) + (Number(apiCost.laborCost)||0)))
+            : (materialFromClothes + laborFromClothes),
+        }],
         clothes: (response.clothes || []).map((item: any) => {
           // Use measurements that are nested within this clothing item
           const itemMeasurements = item.measurements || [];
@@ -144,6 +161,8 @@ export const useOrderHook = ({
 
           return {
             type: item.type || '',
+            color: item.color || '',
+            fabric: item.fabric || '',
             designNotes: item.designNotes || '',
             imageUrls: item.imageUrls || [],
             videoUrls: item.videoUrls || [],
@@ -193,7 +212,7 @@ export const useOrderHook = ({
     reset,
     formState: { errors },
   } = useForm<OrderFormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as unknown as Resolver<OrderFormData>,
     defaultValues: useMemo(() => {
       if (initialData) {
         // Ensure measurements are properly structured
@@ -365,7 +384,7 @@ export const useOrderHook = ({
   }, [currentShopId, fetchTailors]);
 
   // Now call the effect helpers after all dependencies are defined:
-  useOrderInitializationEffect(isEditMode, orderId, isFormInitialized, fetchOrderData, reset, setIsFormInitialized);
+  useOrderInitializationEffect(isEditMode, orderId, isFormInitialized, fetchOrderData, reset, setIsFormInitialized, setValue);
   useMeasurementsInitializationEffect(initialData, setValue);
   useMeasurementChangeLoggerEffect(watch);
   useCurrentMeasurementsLoggerEffect(watch);
@@ -422,6 +441,14 @@ export const useOrderHook = ({
           const { measurements, ...clothData } = cloth;
           return clothData;
         }),
+        // Send costs to backend
+        costs: (data.costs && data.costs.length > 0)
+          ? [{
+              materialCost: Number(data.costs[0]?.materialCost) || 0,
+              laborCost: Number(data.costs[0]?.laborCost) || 0,
+              totalCost: Number(data.costs[0]?.totalCost) || ((Number(data.costs[0]?.materialCost)||0) + (Number(data.costs[0]?.laborCost)||0)),
+            }]
+          : [],
         measurements: data.clothes
           .flatMap(cloth => {
             const measurementValues = cloth.measurements?.[0];
@@ -449,7 +476,6 @@ export const useOrderHook = ({
             // Always return the measurement, even if all values are null
             return [formattedMeasurement];
           }),
-        costs: [], // Costs are now handled within clothes (materialCost and price)
         orderDate: validateAndFormatDate(data.orderDate) || new Date().toISOString(),
         deliveryDate: validateAndFormatDate(data.deliveryDate),
       };

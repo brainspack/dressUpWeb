@@ -24,12 +24,16 @@ export const baseApi = async (
     ...options
   }: BaseApiOptions = {}
 ): Promise<any> => {
+  
 
   let token = localStorage.getItem('accessToken');
   const refreshToken = localStorage.getItem('refreshToken');
 
+  
+
   const authHeaders = {
     'Content-Type': 'application/json',
+    'X-Client': 'admin-web',
     ...headers,
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
@@ -37,6 +41,7 @@ export const baseApi = async (
   const config: RequestInit = {
     method,
     headers: authHeaders,
+    cache: 'no-store',
     ...options,
   };
 
@@ -46,15 +51,26 @@ export const baseApi = async (
 
   try {
     onStart?.();
+    // Build safe URL (handles missing/trailing slashes and absolute endpoints)
+    const buildUrl = (base: string | undefined, ep: string) => {
+      if (/^https?:\/\//i.test(ep)) return ep; // absolute
+      const baseSafe = (base || '').replace(/\/+$/, '');
+      const epSafe = ep.replace(/^\/+/, '');
+      if (!baseSafe) throw new Error('Base API URL is not configured');
+      return `${baseSafe}/${epSafe}`;
+    };
 
-    let response = await fetch(BASE_URL + endpoint, config);
+    let url = buildUrl(BASE_URL, endpoint);
+    let response = await fetch(url, config);
+    console.log(`📡 FRONTEND API: Response status: ${response.status}`);
 
     if (response.status === 401 && endpoint !== '/auth/refresh-token') {
+      console.log(`🔄 FRONTEND API: Token expired, attempting refresh...`);
       if (!refreshPromise) {
         refreshPromise = (async () => {
           let currentRefreshToken = localStorage.getItem('refreshToken');
          
-          const refreshRes = await fetch(BASE_URL + '/auth/refresh-token', {
+          const refreshRes = await fetch(buildUrl(BASE_URL, '/auth/refresh-token'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refreshToken: currentRefreshToken }),
@@ -83,7 +99,8 @@ export const baseApi = async (
         ...authHeaders,
         Authorization: `Bearer ${newToken}`,
       };
-      response = await fetch(BASE_URL + endpoint, config);
+      url = buildUrl(BASE_URL, endpoint);
+      response = await fetch(url, config);
     }
 
    
@@ -91,7 +108,6 @@ export const baseApi = async (
     const contentType = response.headers.get('Content-Type');
     const isJson = contentType?.includes('application/json');
     const responseData = isJson ? await response.json() : await response.text();
-
    
 
     if (!response.ok) {

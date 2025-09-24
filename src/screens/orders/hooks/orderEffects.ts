@@ -8,18 +8,24 @@ export function useOrderInitializationEffect(
   isFormInitialized: boolean,
   fetchOrderData: (id: string) => Promise<OrderFormData>,
   reset: UseFormReset<OrderFormData>,
-  setIsFormInitialized: (val: boolean) => void
+  setIsFormInitialized: (val: boolean) => void,
+  setValue: UseFormSetValue<OrderFormData>
 ) {
   useEffect(() => {
     if (isEditMode && orderId && !isFormInitialized) {
       fetchOrderData(orderId)
         .then((orderData) => {
           reset(orderData);
+          // Ensure dates are explicitly set in the form after reset
+          if (orderData.orderDate) {
+            setValue('orderDate', orderData.orderDate, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+          }
+          setValue('deliveryDate', (orderData.deliveryDate as any) || '', { shouldDirty: false, shouldTouch: false, shouldValidate: false });
           setIsFormInitialized(true);
         })
         .catch(() => {});
     }
-  }, [isEditMode, orderId, isFormInitialized, fetchOrderData, reset, setIsFormInitialized]);
+  }, [isEditMode, orderId, isFormInitialized, fetchOrderData, reset, setIsFormInitialized, setValue]);
 }
 
 export function useMeasurementsInitializationEffect(
@@ -150,6 +156,15 @@ export function useSetTailorIdIfMissingEffect(
         const tailor = tailors.find(t => t.label === currentTailorName);
         if (tailor) {
           setValue('tailorId', tailor.value);
+        }
+      } else if (!currentTailorName && !currentTailorId) {
+        const shopId = watch('shopId');
+        const shopTailors = tailors.filter(t => t.shopId === shopId);
+        if (shopTailors.length === 1) {
+          const onlyTailor = shopTailors[0];
+          setValue('tailorName', onlyTailor.label);
+          setValue('tailorNumber', onlyTailor.mobileNumber || '');
+          setValue('tailorId', onlyTailor.value);
         }
       }
     }

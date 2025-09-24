@@ -145,9 +145,9 @@ const Orders = () => {
                                 <Tooltip text="View Details">
                                   <Eye className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => handleViewOrder(order)} />
                                 </Tooltip>
-                                <Tooltip text="Edit Order">
+                                {/* <Tooltip text="Edit Order">
                                   <Edit className="w-5 h-5 text-[#55AC9A] cursor-pointer" onClick={() => handleEditOrder(order)}/>
-                                </Tooltip>
+                                </Tooltip> */}
                                 <Tooltip text="Delete Order">
                                   <Trash2 className="w-4 h-4 text-[#55AC9A] cursor-pointer" onClick={() => handleDeleteOrder(order.id)}/>
                                 </Tooltip>

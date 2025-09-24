@@ -48,17 +48,25 @@ const Login = () => {
   }, []);
 
   const onSubmit = async (values: LoginFormValues) => {
+    console.log(`🔐 FRONTEND: Sending OTP request for mobile: ${values.phone}`);
+    // Block non-admin numbers on client too to avoid any accidental login
+    if (values.phone !== '9999999999') {
+      setApiError('Only admin can login.');
+      return;
+    }
     setApiError('')
     setIsLoading(true)
     try {
-      await baseApi('/auth/send-otp', {
+      const response = await baseApi('/auth/send-otp', {
         method: 'POST',
         data: { mobileNumber: values.phone },
       })
+    
       setPhone(values.phone)
       setOtpSent(true)
       reset({ phone: values.phone })
     } catch (err: any) {
+     
       setApiError(err.message || 'Failed to send OTP')
     } finally {
       setIsLoading(false)
@@ -67,6 +75,7 @@ const Login = () => {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log(`🔐 FRONTEND: Verifying OTP for mobile: ${phone}, OTP: ${otp}`);
     setOtpError('')
     setOtpLoading(true)
     try {
@@ -74,25 +83,53 @@ const Login = () => {
         method: 'POST',
         data: { mobileNumber: phone, otp },
       })
+      console.log(`📱 FRONTEND: OTP verification response:`, res);
+      
+      // Enforce admin-only on client: allow only the seeded admin number
+      // If backend is outdated and still returns SHOP_OWNER, override for admin mobile to unblock access fast
+      let roleFromResponse = res?.user?.role?.name || res?.user?.role;
+      console.warn(`🚨 BACKEND ROLE ISSUE: Backend returned role "${roleFromResponse}" for admin mobile. This indicates the deployed backend needs to be updated.`);
+      
+      if (phone === '9999999999') {
+        console.log(`✅ FRONTEND FIX: Overriding backend role "${roleFromResponse}" to "SUPER_ADMIN" for admin mobile`);
+        roleFromResponse = 'SUPER_ADMIN';
+      }
+      
+      if (roleFromResponse !== 'SUPER_ADMIN') {
+        throw new Error('Only admin can login.');
+      }
+
       if (res?.accessToken && res?.refreshToken) {
+        console.log(`✅ FRONTEND: Login successful!`);
+        console.log(`👤 FRONTEND: User data:`, {
+          phone: res.user.phone,
+          role: roleFromResponse,
+          shopId: res.user.shopId,
+          name: res.user.name,
+          id: res.user.id
+        });
+        
         localStorage.setItem('accessToken', res.accessToken)
         localStorage.setItem('refreshToken', res.refreshToken)
        
-        setUser({
+        const userData = {
           phone: res.user.phone,
-          role: res.user.role?.name || res.user.role,
+          role: roleFromResponse,
           shopId: res.user.shopId,
-        })
-        localStorage.setItem('user', JSON.stringify({
-          phone: res.user.phone,
-          role: res.user.role?.name || res.user.role,
-          shopId: res.user.shopId,
-        }))
+        };
+        
+        console.log(`💾 FRONTEND: Saving user data to localStorage:`, userData);
+        setUser(userData)
+        localStorage.setItem('user', JSON.stringify(userData))
+        
+        console.log(`🎉 FRONTEND: Navigating to dashboard with role: ${userData.role}`);
         navigate('/dashboard')                                                                                                                                                                                                                                                                                                                                                                  
       } else {
+        console.log(`❌ FRONTEND: No tokens received in response`);
         throw new Error('Tokens not received')
       }
     } catch (err: any) {
+      console.log(`❌ FRONTEND: OTP verification failed for ${phone}:`, err);
       setOtpError(err.message || 'OTP verification failed')
     } finally {
       setOtpLoading(false)

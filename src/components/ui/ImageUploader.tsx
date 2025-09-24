@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { CloudUpload, X } from 'lucide-react';
+import { CloudUpload, X, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { Input } from './input'; // Assuming Input component is available in the same directory
+import { Input } from './input';
+import { BackendUploadService } from '../../services/backendUploadService';
 
 interface ImageUploaderProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -28,6 +29,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFiles, setSelectedFiles] = useState<string[]>(initialUrls);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Remove image by index
   const handleRemoveImage = (idx: number) => {
@@ -35,33 +37,63 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     newFiles.splice(idx, 1);
     setSelectedFiles(newFiles);
     if (onUploadSuccess) onUploadSuccess(newFiles);
-    if (onFilesChange) {
-      // Notifies parent to update form state
-      // You may want to pass a FileList-like object or just update the URLs in parent
-      // Here, we just update URLs
-    }
   };
 
   const handleDivClick = () => {
-    if (selectedFiles.length < maxFiles) {
+    if (selectedFiles.length < maxFiles && !isUploading) {
       fileInputRef.current?.click();
     }
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files) return;
+    if (!files || isUploading) return;
 
-    let urls = Array.from(files).map(file => URL.createObjectURL(file));
-    let newFiles = [...selectedFiles, ...urls].slice(0, maxFiles);
+    setIsUploading(true);
 
-    setSelectedFiles(newFiles);
-    if (onUploadSuccess) onUploadSuccess(newFiles);
-    if (onFilesChange) onFilesChange(files);
+    try {
+      // Convert FileList to Array
+      const fileArray = Array.from(files);
+      
+      // Check if we can add these files without exceeding maxFiles
+      const totalFiles = selectedFiles.length + fileArray.length;
+      if (totalFiles > maxFiles) {
+        alert(`Maximum ${maxFiles} files allowed`);
+        return;
+      }
 
-    // Reset the file input so the same file can be uploaded again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      // Upload files through backend (no direct S3 PUT requests)
+      const uploadResults = await BackendUploadService.uploadMultipleFilesThroughBackend(fileArray);
+      
+      // Filter successful uploads and get their view URLs
+      const successfulUploads = uploadResults
+        .filter(result => result.success && result.viewUrl)
+        .map(result => result.viewUrl!);
+
+      if (successfulUploads.length === 0) {
+        alert('Failed to upload images. Please try again.');
+        return;
+      }
+
+      // Update state with S3 URLs
+      const newFiles = [...selectedFiles, ...successfulUploads].slice(0, maxFiles);
+      setSelectedFiles(newFiles);
+      
+      if (onUploadSuccess) onUploadSuccess(newFiles);
+      if (onFilesChange) onFilesChange(files);
+
+      console.log('✅ Images uploaded to S3:', successfulUploads);
+
+    } catch (error) {
+      console.error('❌ Upload error:', error);
+      alert('Failed to upload images. Please try again.');
+    } finally {
+      setIsUploading(false);
+      
+      // Reset the file input so the same file can be uploaded again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -72,27 +104,38 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   }, [initialUrls]);
 
   return (
-    <div
-      className={cn(
-        "relative border-2 border-dashed border-gray-300 rounded-md p-2 text-center cursor-pointer hover:border-blue-500 transition-colors w-[120px] h-[120px] flex flex-col items-center justify-center",
-        className
+    <div className="space-y-2">
+      {/* Upload button */}
+      {selectedFiles.length < maxFiles && (
+        <div
+          className={cn(
+            "relative border-2 border-dashed border-gray-300 rounded-md p-2 text-center cursor-pointer hover:border-blue-500 transition-colors w-[120px] h-[120px] flex flex-col items-center justify-center",
+            isUploading && "opacity-50 cursor-not-allowed",
+            className
+          )}
+          onClick={handleDivClick}
+        >
+          <Input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            multiple={multiple}
+            disabled={selectedFiles.length >= maxFiles || isUploading}
+            {...props}
+          />
+          <div className="flex flex-col items-center justify-center">
+            {isUploading ? (
+              <Loader2 className="w-7 h-7 text-blue-500 mb-1 animate-spin" />
+            ) : (
+              <CloudUpload className="w-7 h-7 text-gray-400 mb-1" />
+            )}
+            <p className="text-gray-600 font-semibold text-xs">
+              {isUploading ? 'Uploading...' : uploadText}
+            </p>
+          </div>
+        </div>
       )}
-      onClick={handleDivClick}
-    >
-      <Input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="hidden"
-        multiple={multiple}
-        disabled={selectedFiles.length >= maxFiles}
-        {...props}
-      />
-      <div className="flex flex-col items-center justify-center">
-        <CloudUpload className="w-7 h-7 text-gray-400 mb-1" />
-        <p className="text-gray-600 font-semibold text-xs">{uploadText}</p>
-       
-      </div>
     </div>
   );
 };

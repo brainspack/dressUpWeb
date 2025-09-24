@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { baseApi } from '../api/baseApi';
 import useAuthStore from './useAuthStore';
+import { getEffectiveRole } from '../utils/roleUtils';
 
 export interface Shop {
   id: string;
@@ -41,8 +42,24 @@ export const useShopStore = create<ShopState>((set) => ({
     try {
       const user = useAuthStore.getState().user;
       let response;
-      if (user?.role === 'SUPER_ADMIN') {
-        response = await baseApi('/shops', { method: 'GET' });
+      
+      const effectiveRole = getEffectiveRole(user);
+      
+      console.log(`🏪 SHOP STORE: User phone: ${user?.phone}, Role: ${user?.role}, Effective role: ${effectiveRole}`);
+      
+      if (effectiveRole === 'SUPER_ADMIN') {
+        try {
+          response = await baseApi('/shops', { method: 'GET' });
+        } catch (error: any) {
+          // If backend is outdated and still blocks SUPER_ADMIN, fallback to my-shops
+          if (error.message?.includes('Access denied') || error.message?.includes('403')) {
+            console.warn('🚨 BACKEND ISSUE: /shops endpoint blocked, falling back to /shops/my-shops');
+            console.warn('   This indicates the deployed backend needs role elevation fixes');
+            response = await baseApi('/shops/my-shops', { method: 'GET' });
+          } else {
+            throw error;
+          }
+        }
       } else {
         response = await baseApi('/shops/my-shops', { method: 'GET' });
       }

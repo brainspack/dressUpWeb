@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { baseApi } from '../api/baseApi';
 import useAuthStore from './useAuthStore';
+import { getEffectiveRole } from '../utils/roleUtils';
 
 interface Tailor {
   id: string;
@@ -48,8 +49,9 @@ export const useTailorStore = create<TailorState>((set) => ({
     try {
       const response = await baseApi(`/tailors/by-shop/${shopId}`, { method: 'GET' });
       const user = useAuthStore.getState().user;
+      const role = getEffectiveRole(user).toLowerCase();
       let tailors = response as Tailor[];
-      if (user?.role?.toLowerCase() === 'shop_owner' && user.shopId) {
+      if (role === 'shop_owner' && user?.shopId) {
         tailors = tailors.filter(tailor => tailor.shopId === user.shopId);
       }
       set({ tailors, loading: false });
@@ -64,8 +66,9 @@ export const useTailorStore = create<TailorState>((set) => ({
     try {
       const response = await baseApi(`/tailors`, { method: 'GET' });
       const user = useAuthStore.getState().user;
+      const role = getEffectiveRole(user).toLowerCase();
       let tailors = response as Tailor[];
-      if (user?.role?.toLowerCase() === 'shop_owner' && user.shopId) {
+      if (role === 'shop_owner' && user?.shopId) {
         tailors = tailors.filter(tailor => tailor.shopId === user.shopId);
       }
       set({ tailors, loading: false });
