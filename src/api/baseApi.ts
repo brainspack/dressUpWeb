@@ -31,7 +31,7 @@ export const baseApi = async (
 
   
 
-  const authHeaders = {
+  const authHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     'X-Client': 'admin-web',
     ...headers,
@@ -46,7 +46,14 @@ export const baseApi = async (
   };
 
   if (data) {
-    config.body = JSON.stringify(data);
+    const isFormData = typeof FormData !== 'undefined' && data instanceof FormData;
+    if (isFormData) {
+      // Let browser set proper multipart boundary
+      delete (config.headers as Record<string, string>)['Content-Type'];
+      config.body = data as any;
+    } else {
+      config.body = JSON.stringify(data);
+    }
   }
 
   try {

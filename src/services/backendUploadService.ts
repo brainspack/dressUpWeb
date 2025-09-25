@@ -62,31 +62,14 @@ export class BackendUploadService {
         throw new Error('No authentication token found. Please login again.');
       }
 
-      // Use fetch directly to avoid baseApi's JSON.stringify on FormData
-      const response = await fetch('http://localhost:3000/orders/upload-direct', {
+``      // Use baseApi so URL comes from VITE_BASE_API_URL and headers are consistent (and FormData stays intact)
+      const responseData = await baseApi('/orders/upload-direct', {
         method: 'POST',
-        body: formData,
+        data: formData,
         headers: {
-          'Authorization': `Bearer ${token}`,
           'X-Client': 'admin-web'
-        },
-        // Don't set Content-Type header, let browser set it with boundary for FormData
-      });
-
-      console.log('📡 Upload response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Upload failed:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText
-        });
-
-        throw new Error(`Upload failed with status ${response.status}: ${errorText}`);
-      }
-
-      const responseData = await response.json();
+        }
+      });``
 
       if (!responseData.success) {
         throw new Error(responseData.error || 'Upload failed');
