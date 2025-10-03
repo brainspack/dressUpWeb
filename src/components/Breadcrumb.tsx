@@ -10,6 +10,7 @@ const routeNameMap: Record<string, string> = {
   'new-order': 'New Order',
   profile: 'Profile',
   shop: 'Shop',
+  shopprofile: 'Shopprofile',
   customer: 'Customer',
   dashboard: 'Dashboard',
   edit: 'Edit',
@@ -17,6 +18,18 @@ const routeNameMap: Record<string, string> = {
 };
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Helper function to generate unique shop ID from UUID
+const generateShopId = (shopUuid: string): string => {
+  let hash = 0;
+  for (let i = 0; i < shopUuid.length; i++) {
+    const char = shopUuid.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  const uniqueId = Math.abs(hash) % 1000;
+  return `Shp-${String(uniqueId).padStart(3, '0')}`;
+};
 
 const Breadcrumb: React.FC = () => {
   const location = useLocation();
@@ -35,7 +48,18 @@ const Breadcrumb: React.FC = () => {
     if (segments[0] === 'shop' && segments[1] === 'shopprofile' && segments[2]) {
       setLoadingSerial(true);
       baseApi(`/shops/${segments[2]}`, { method: 'GET' })
-        .then((data) => setSerial(data.serialNumber ? `Shp-${data.serialNumber + 999}` : null))
+        .then((data) => {
+          // Use serialNumber if available, otherwise generate unique ID from UUID
+          if (data.serialNumber) {
+            setSerial(`Shp-${String(data.serialNumber).padStart(3, '0')}`);
+          } else {
+            setSerial(generateShopId(segments[2]));
+          }
+        })
+        .catch(() => {
+          // Fallback: generate unique ID from shop UUID if API fails
+          setSerial(generateShopId(segments[2]));
+        })
         .finally(() => setLoadingSerial(false));
     }
     // Customer profile: /customer/profile/:id
@@ -73,7 +97,7 @@ const Breadcrumb: React.FC = () => {
         .then((data) => setSerial(data.serialNumber ? `Ord-${data.serialNumber + 999}` : null))
         .finally(() => setLoadingSerial(false));
     }
-  }, [location.pathname]);
+  }, [location.pathname, segments]);
 
   // Build the breadcrumb display
   const breadcrumb = segments.map((seg, idx) => {

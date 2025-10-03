@@ -49,12 +49,26 @@ const ShopProfile: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
   const { shops } = useShopStore();
+  
+  // Force component refresh when shop ID changes
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [shopData, setShopData] = useState<any>(null);
+  
+  // Clear shop data when shop ID changes
+  useEffect(() => {
+    if (id) {
+      console.log('🔄 Shop ID changed, clearing previous data and forcing refresh');
+      setShopData(null);
+      setLoading(true);
+      setError(null);
+      setRefreshKey(prev => prev + 1); // Force component refresh
+    }
+  }, [id]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { tailors, loading: loadingTailors, error: errorTailors, fetchTailors } = useTailorStore();
+  const { tailors, loading: loadingTailors, error: errorTailors, fetchTailors, clearTailors } = useTailorStore();
   const { customers, loading: loadingCustomers, error: errorCustomers, fetchCustomers } = useCustomerStore();
 
   const [showTailorForm, setShowTailorForm] = useState(false);
@@ -140,12 +154,31 @@ const ShopProfile: React.FC = () => {
     const fetchShopData = async () => {
       setLoading(true);
       setError(null);
+      clearTailors(); // Clear previous shop's tailors
+      setShopData(null); // Clear previous shop data
       try {
         if (id) {
-          const response = await baseApi(`/shops/${id}`, { method: 'GET' });
-          setShopData(response);
-          fetchTailors(id);
-          fetchCustomers(id);
+          console.log('🏪 Loading shop profile for:', id);
+          try {
+            // Add cache busting to ensure fresh data
+            const response = await baseApi(`/shops/${id}?_t=${Date.now()}`, { method: 'GET' });
+            console.log('🏪 Shop profile response:', response);
+            console.log('📊 Shop summary data:', {
+              totalOrders: response.totalOrders,
+              totalTailors: response.totalTailors,
+              totalActiveTailors: response.totalActiveTailors,
+              deliveredOrders: response.deliveredOrders,
+              pendingOrders: response.pendingOrders
+            });
+            setShopData(response);
+            await fetchTailors(id);
+            fetchCustomers(id);
+          } catch (shopError) {
+            console.error('❌ Error fetching shop data for ID:', id, shopError);
+            // If shop doesn't exist, try to find by name or redirect
+            console.log('🔄 Shop not found, checking if URL needs correction...');
+            setError(`Shop with ID ${id} not found. Please check the URL.`);
+          }
         } else {
           setError('Shop ID not provided in URL');
         }
@@ -159,7 +192,7 @@ const ShopProfile: React.FC = () => {
     };
 
     fetchShopData();
-  }, [id, fetchTailors, fetchCustomers]);
+  }, [id, fetchTailors, fetchCustomers, clearTailors]);
 
   useEffect(() => {
     if (user?.role?.toLowerCase() === 'shop_owner' && !user?.shopId && shops.length > 0) {
@@ -180,14 +213,26 @@ const ShopProfile: React.FC = () => {
     <div className="flex bg-[#F2F7FE]">
       <main className="flex-1 flex flex-col overflow-hidden">
        
-        <div className="flex-1 p-5 overflow-y-auto">
-          <Button
-            variant="mintGreen"
-            onClick={() => navigate(-1)}
-            className="mb-4"
-          >
-            ← Back
-          </Button>
+        <div key={refreshKey} className="flex-1 p-5 overflow-y-auto">
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="mintGreen"
+              onClick={() => navigate(-1)}
+            >
+              ← Back
+            </Button>
+            {/* <Button
+              variant="outline"
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered');
+                setRefreshKey(prev => prev + 1);
+                setShopData(null);
+                clearTailors();
+              }}
+            >
+              🔄 Refresh
+            </Button> */}
+          </div>
           {loading && <Loader message="Loading shop data..." />}
           {error && <p className="text-red-500">Error: {error}</p>}
 
@@ -224,7 +269,7 @@ const ShopProfile: React.FC = () => {
                     <div className="rounded-full w-12 h-12 flex items-center justify-center bg-gray-200 text-gray-600 mt-4 mb-2 ">
                       <Shirt size={24} />
                     </div>
-                    <div className="text-2xl font-bold">{shopData.totalActiveTailors || 0}</div>
+                    <div className="text-2xl font-bold">{shopData.totalTailors || 0}</div>
                     <p className="text-gray-500">Total Tailors</p>
                   </ReusableCard>
                   {/* Delivered Orders Card */}

@@ -19,6 +19,7 @@ interface TailorState {
   fetchTailors: (shopId: string) => Promise<void>;
   fetchAllTailors: () => Promise<void>;
   updateTailor: (id: string, data: Partial<Tailor>) => Promise<void>;
+  clearTailors: () => void;
 }
 
 export const useTailorStore = create<TailorState>((set) => ({
@@ -45,19 +46,24 @@ export const useTailorStore = create<TailorState>((set) => ({
   },
 
   fetchTailors: async (shopId) => {
-    set({ loading: true, error: null });
+    set({ loading: true, error: null, tailors: [] }); // Clear tailors immediately
     try {
-      const response = await baseApi(`/tailors/by-shop/${shopId}`, { method: 'GET' });
+      console.log('🔍 Fetching tailors for shop:', shopId);
+      // Add cache busting to ensure fresh data
+      const response = await baseApi(`/tailors/by-shop/${shopId}?_t=${Date.now()}`, { method: 'GET' });
+      console.log('📦 Raw API response:', response);
       const user = useAuthStore.getState().user;
       const role = getEffectiveRole(user).toLowerCase();
       let tailors = response as Tailor[];
       if (role === 'shop_owner' && user?.shopId) {
         tailors = tailors.filter(tailor => tailor.shopId === user.shopId);
       }
+      console.log('✅ Tailors fetched:', tailors.length, 'for shop:', shopId);
+      console.log('📋 Tailor details:', tailors.map(t => ({ name: t.name, mobileNumber: t.mobileNumber, shopId: t.shopId })));
       set({ tailors, loading: false });
     } catch (err: any) {
-      console.error('Error fetching tailors:', err);
-      set({ error: err.message || 'Failed to fetch tailors', loading: false });
+      console.error('❌ Error fetching tailors for shop', shopId, ':', err);
+      set({ error: err.message || 'Failed to fetch tailors', loading: false, tailors: [] });
     }
   },
 
@@ -97,4 +103,8 @@ export const useTailorStore = create<TailorState>((set) => ({
       throw err;
     }
   },
+
+  clearTailors: () => {
+    set({ tailors: [], error: null });
+  }
 })); 
